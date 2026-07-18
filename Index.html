@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>UCN Songbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'OpenDyslexic';src:url('https://cdn.jsdelivr.net/npm/opendyslexic@0.91413.1/regular/OpenDyslexic-Regular.otf') format('opentype');}
+:root{
+  --bg:#0E1626;--surface:#152238;--surface2:#1C2A46;--border:#2B3A52;
+  --accent:#4FA8C9;--accent-glow:rgba(79,168,201,0.2);
+  --chorus-bg:rgba(221,122,43,0.10);--chorus-border:#DD7A2B;
+  --text:#EAF0FB;--text-muted:#8C949E;--text-dim:#4E5A6A;
+  --star:#E39A3E;--hdr:#1B2A5E;--tag-bg:#1C3A52;--font-size:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;font-size:var(--font-size);background:var(--bg);color:var(--text);}
+[data-font="exo"] *{font-family:'Exo 2',sans-serif!important;}
+[data-font="dyslexic"] *{font-family:'OpenDyslexic',sans-serif!important;letter-spacing:.05em;word-spacing:.1em;line-height:1.8!important;}
+#app{display:flex;flex-direction:column;height:100vh;}
+.hdr{background:var(--hdr);border-bottom:2px solid var(--accent);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10;}
+.hdr::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 15% 35%,rgba(255,255,255,.35) 0%,transparent 100%),radial-gradient(1px 1px at 40% 65%,rgba(255,255,255,.2) 0%,transparent 100%),radial-gradient(1px 1px at 72% 28%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 58% 52%,rgba(79,168,201,.5) 0%,transparent 100%);}
+.hdr-l{display:flex;align-items:center;gap:10px;z-index:1;}.hdr-r{display:flex;align-items:center;gap:6px;z-index:1;}
+.logo{height:38px;width:auto;}.site-title{font-size:1.05rem;font-weight:700;color:#EAF0FB;letter-spacing:.04em;}
+.ibtn{background:none;border:none;color:rgba(234,240,251,0.6);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.15rem;transition:color .2s,background .2s;}
+.ibtn:hover,.ibtn.active{color:var(--accent);background:rgba(79,168,201,0.12);}
+.portal-bar{background:rgba(27,42,94,0.6);border-bottom:1px solid var(--border);padding:6px 16px;flex-shrink:0;}
+.portal-link{display:inline-flex;align-items:center;gap:5px;color:var(--text-muted);font-size:.75rem;text-decoration:none;transition:color .2s;}
+.portal-link:hover{color:var(--accent);}
+.portal-link::before{content:'\2190';}
+#list-view{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.sw{padding:12px 16px 8px;flex-shrink:0;}
+.sb{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;transition:border-color .2s;}
+.sb:focus-within{border-color:var(--accent);}
+.si{color:var(--text-muted);font-size:1rem;}
+.sinp{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1rem;padding:10px 0;font-family:inherit;}
+.sinp::placeholder{color:var(--text-dim);}
+.xcbtn{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;display:none;align-items:center;font-size:.9rem;}
+.xcbtn.vis{display:flex;}
+.cw{padding:0 16px 8px;flex-shrink:0;}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cpill{flex-shrink:0;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.cpill.active{background:var(--accent);border-color:var(--accent);color:#0E1626;}
+.cpill:not(.active):hover{border-color:var(--accent);color:var(--accent);}
+.lmeta{padding:0 16px 6px;color:var(--text-dim);font-size:.75rem;flex-shrink:0;}
+.slist{flex:1;overflow-y:auto;padding:0 16px 80px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.slist::-webkit-scrollbar{width:4px;}.slist::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.song-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;padding:12px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .1s;display:flex;align-items:center;gap:12px;border-left:3px solid transparent;}
+.song-card:hover{border-left-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow);}
+.song-card:active{transform:scale(.98);}.song-card.fav{border-left-color:var(--star);}
+.ci{width:36px;height:36px;border-radius:8px;background:var(--tag-bg);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.cb{flex:1;min-width:0;}.ct{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cs{font-size:.75rem;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cp{font-size:.7rem;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cstar{color:var(--text-dim);font-size:1.1rem;flex-shrink:0;padding:6px;background:none;border:none;cursor:pointer;}
+.cstar.active{color:var(--star);}
+.no-res{text-align:center;padding:40px 16px;color:var(--text-muted);}.nr-icon{font-size:2.5rem;margin-bottom:12px;}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--text-muted);}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-error{text-align:center;padding:40px 16px;color:var(--text-muted);}
+.load-error .err-icon{font-size:2.5rem;margin-bottom:12px;}
+.load-error code{display:block;margin-top:8px;font-size:.75rem;color:var(--text-dim);background:var(--surface2);padding:6px 10px;border-radius:6px;}
+#detail-view{display:none;flex-direction:column;flex:1;overflow:hidden;}#detail-view.vis{display:flex;}
+.dbar{padding:0 8px;height:48px;display:flex;align-items:center;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
+.bbtn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;padding:8px;border-radius:8px;}
+.bbtn:hover{background:rgba(79,168,201,0.1);}.dact{margin-left:auto;display:flex;gap:4px;}
+.sinfo{padding:16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sinfo h1{font-size:1.2rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
+.ir{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:.8rem;color:var(--text-muted);}
+.ir.source{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;}
+.lw{flex:1;overflow-y:auto;padding:20px 16px 100px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lw::-webkit-scrollbar{width:4px;}.lw::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.lyric-block{margin-bottom:20px;}.lyric-block p,.lyric-chorus p{line-height:1.75;margin-bottom:1px;font-size:var(--font-size);}
+.lyric-chorus{background:var(--chorus-bg);border-left:3px solid var(--chorus-border);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:20px;}
+.lyric-chorus.no-highlight{background:none;border-left:none;padding-left:0;margin-bottom:20px;}
+.chorus-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--chorus-border);margin-bottom:6px;}
+.no-highlight .chorus-label{display:none;}
+.lyric-instruction{text-align:center;color:var(--text-dim);font-style:italic;font-size:.85rem;margin-bottom:16px;padding:4px;}
+.lyric-section-label{color:var(--accent);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:4px 0;}
+.trad-badge{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:rgba(79,168,201,0.15);color:var(--accent);border:1px solid rgba(79,168,201,0.3);margin-left:6px;vertical-align:middle;}
+.scbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;display:none;align-items:center;gap:10px;z-index:20;}
+.scbar.vis{display:flex;}.scbar label{font-size:.8rem;color:var(--text-muted);white-space:nowrap;}.scbar input{flex:1;accent-color:var(--accent);}
+.sctog{background:var(--accent);color:#0E1626;border:none;border-radius:20px;padding:6px 14px;font-size:.8rem;font-weight:700;cursor:pointer;}
+.sctog.pau{background:var(--surface2);color:var(--text);}
+.overlay{position:fixed;inset:0;background:rgba(5,10,20,.7);z-index:30;display:none;backdrop-filter:blur(3px);}
+.overlay.vis{display:block;}
+.panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;z-index:31;padding:20px 20px 40px;transform:translateY(100%);transition:transform .3s ease;overflow-y:auto;max-height:85vh;}
+.panel.vis{transform:translateY(0);}.sh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.stitle{font-size:1rem;font-weight:700;margin-bottom:20px;text-align:center;color:var(--accent);}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}.slabel{font-size:.9rem;color:var(--text);}
+.tog{position:relative;width:44px;height:24px;}.tog input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
+.tslider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
+.tog input:checked+.tslider{background:var(--accent);}.tog input:checked+.tslider::before{transform:translateX(20px);}
+.fbtns{display:flex;gap:8px;flex-wrap:wrap;}
+.fbtn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:all .2s;}
+.fbtn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,168,201,0.1);}
+.szw{display:flex;align-items:center;gap:10px;}
+.szbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.szbtn:hover{border-color:var(--accent);color:var(--accent);}
+.szval{font-size:.85rem;color:var(--text-muted);min-width:32px;text-align:center;}
+.spw{display:flex;align-items:center;gap:8px;flex:1;}.spw input{flex:1;accent-color:var(--accent);}
+.spl{font-size:.8rem;color:var(--text-muted);}
+.about-section{padding:14px 0;border-bottom:1px solid var(--border);}.about-section:last-child{border-bottom:none;}
+.about-section h3{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:8px;}
+.about-section p{font-size:.85rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.about-section p:last-child{margin-bottom:0;}
+.about-logo{display:flex;justify-content:center;margin-bottom:14px;}.about-logo img{height:56px;width:auto;opacity:.9;}
+.disclaimer-box{background:rgba(221,122,43,0.08);border:1px solid rgba(221,122,43,0.25);border-radius:8px;padding:10px 12px;margin-top:4px;}
+.disclaimer-box p{font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.disclaimer-box p:last-child{margin-bottom:0;}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.scbar{padding-bottom:calc(10px + env(safe-area-inset-bottom));}.panel{padding-bottom:calc(40px + env(safe-area-inset-bottom));}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hdr">
+    <div class="hdr-l">
+      <img class="logo" src="data:image/png;base64,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" alt="UCN">
+      <span class="site-title">UCN Songbook</span>
+    </div>
+    <div class="hdr-r">
+      <button class="ibtn" id="btn-about" title="About">&#9432;</button>
+      <button class="ibtn" id="btn-rand" title="Random song">&#127922;</button>
+      <button class="ibtn" id="btn-settings" title="Settings">&#9881;&#65039;</button>
+    </div>
+  </header>
+  <div class="portal-bar">
+    <a class="portal-link" href="https://toolportal.netlify.app">Tool Portal</a>
+  </div>
+  <div id="list-view">
+    <div class="sw"><div class="sb"><span class="si">&#128269;</span><input class="sinp" id="search-input" type="search" placeholder="Search songs or tunes..." autocomplete="off" spellcheck="false"><button class="xcbtn" id="xcbtn" aria-label="Clear">&#10005;</button></div></div>
+    <div class="cw"><div class="cats" id="cat-tabs"></div></div>
+    <div class="lmeta" id="list-meta"></div>
+    <div class="slist" id="song-list"></div>
+  </div>
+  <div id="detail-view">
+    <div class="dbar">
+      <button class="bbtn" id="btn-back">&#8592; Back</button>
+      <div class="dact">
+        <button class="ibtn" id="btn-fav" title="Favourite">&#9734;</button>
+        <button class="ibtn" id="btn-drand" title="Random">&#127922;</button>
+      </div>
+    </div>
+    <div class="sinfo" id="song-info"></div>
+    <div class="lw" id="lw"></div>
+  </div>
+  <div class="scbar" id="scbar">
+    <button class="sctog" id="sctog">&#9208; Pause</button>
+    <label>Speed</label>
+    <input type="range" id="sc-speed" min="1" max="10" value="3">
+  </div>
+</div>
+<div class="overlay" id="sov"></div>
+<div class="panel" id="spanel">
+  <div class="sh"></div><div class="stitle">Settings</div>
+  <div class="srow"><div class="slabel">&#9835; Highlight Choruses</div><label class="tog"><input type="checkbox" id="tog-chorus" checked><span class="tslider"></span></label></div>
+  <div class="srow"><div class="slabel">&#9835; Chorus Display</div><div class="fbtns"><button class="fbtn cdbtn active" data-cd="once">Once only</button><button class="fbtn cdbtn" data-cd="full">Every time</button></div></div>
+  <div class="srow"><div class="slabel">&#8597; Auto-Scroll</div><label class="tog"><input type="checkbox" id="tog-scroll"><span class="tslider"></span></label></div>
+  <div class="srow" id="speed-row" style="display:none"><div class="slabel">Scroll Speed</div><div class="spw"><span class="spl">&#128034;</span><input type="range" id="st-speed" min="1" max="10" value="3"><span class="spl">&#128640;</span></div></div>
+  <div class="srow"><div class="slabel">Aa Font</div><div class="fbtns"><button class="fbtn active" data-font="system">Default</button><button class="fbtn" data-font="exo">Exo 2</button><button class="fbtn" data-font="dyslexic">Dyslexic</button></div></div>
+  <div class="srow"><div class="slabel">Text Size</div><div class="szw"><button class="szbtn" id="size-down">A&#8722;</button><span class="szval" id="size-val">16px</span><button class="szbtn" id="size-up">A+</button></div></div>
+</div>
+<div class="overlay" id="aov"></div>
+<div class="panel" id="apanel">
+  <div class="sh"></div>
+  <div class="about-logo"><img src="data:image/png;base64,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" alt="UCN Logo"></div>
+  <div class="stitle" style="margin-bottom:4px">UCN Songbook</div>
+  <p style="text-align:center;font-size:.8rem;color:var(--text-dim);margin-bottom:16px">Updated 26 June 2026</p>
+  <div class="about-section"><h3>Made by</h3><p>Sub Lt Tetra &mdash; Discord: <strong>finlay3110</strong></p></div>
+  <div class="about-section"><h3>Original Songbook</h3><p>Compiled by Lt. Cmdr. Jim &mdash; Ship&#39;s Councillor</p></div>
+  <div class="about-section"><h3>Request updates</h3><p>Post in the <strong>#songbook</strong> channel on the BC Discord server, or DM Tetra directly.</p></div>
+  <div class="about-section"><h3>Disclaimer</h3>
+    <div class="disclaimer-box">
+      <p>The UCN logo is the property of Bridge Command / The London Space Elevator Limited.</p>
+      <p>This is a fan-made project and is not approved by or affiliated with Bridge Command / The London Space Elevator Limited.</p>
+      <p>Song lyrics are the property of their respective copyright holders. UCN-themed songs are reproduced here as original fan parodies.</p>
+    </div>
+  </div>
+</div>
+<script>
+/* ============================================================
+   SONGS are loaded from songs.json at startup via fetch().
+   This keeps the app code and song data completely separate:
+     ucn_songbook.html  — the app (rarely changes)
+     songs.json         — the data (edit this to add songs)
+
+   NOTE: fetch() requires a web server (e.g. Netlify).
+   Opening ucn_songbook.html directly as a local file will
+   not work — always access it through the Netlify URL.
+   ============================================================ */
+
+const CAT_ICONS = {
+  'Patriotic Songs':'\uD83D\uDE80','Bar/Drinking Songs':'\uD83C\uDF7A','Crew Ballads':'\uD83E\uDD41',
+  'Accompanied Songs':'\uD83C\uDFB5','Songs About Us':'\u2B50',
+  'Fragments and Works in Progress':'\uD83D\uDCDD','Traditional Songs':'\u2693',
+  'Movie/TV':'\uD83C\uDFAC','Improvised Songs':'\uD83C\uDFAD'
+};
+
+/* App-wide song list — populated after fetch completes */
+let SONGS = [];
+
+/* Settings state */
+let state={category:'All',query:'',currentSong:null,favourites:[],highlightChorus:true,chorusDisplay:'once',autoScroll:false,scrollPaused:false,scrollSpeed:3,fontSize:16,font:'system'};
+try{var _s=JSON.parse(localStorage.getItem('ucn_s')||'{}');if(_s.f)state.favourites=_s.f;if(_s.hc!==undefined)state.highlightChorus=_s.hc;if(_s.cd)state.chorusDisplay=_s.cd;if(_s.sp)state.scrollSpeed=_s.sp;if(_s.fs)state.fontSize=_s.fs;if(_s.fn)state.font=_s.fn;}catch(e){}
+function saveState(){try{localStorage.setItem('ucn_s',JSON.stringify({f:state.favourites,hc:state.highlightChorus,cd:state.chorusDisplay,sp:state.scrollSpeed,fs:state.fontSize,fn:state.font}));}catch(e){}}
+
+/* Helpers */
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function filteredSongs(){var q=state.query.toLowerCase();return SONGS.filter(function(s){if(state.category!=='All'&&s.category!==state.category)return false;if(!q)return true;return s.title.toLowerCase().indexOf(q)>-1||(s.tune&&s.tune.toLowerCase().indexOf(q)>-1)||(s.words&&s.words.toLowerCase().indexOf(q)>-1);});}
+
+/* Lyric rendering */
+function chorusBlockHtml(lines){var hl=state.highlightChorus;var html='<div class="lyric-chorus'+(hl?'':' no-highlight')+'"><div class="chorus-label">\u266A Chorus</div>';html+=lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('');return html+'</div>';}
+function renderLyrics(lyrics){var blocks=lyrics.split('\n\n'),html='',chorusLines=null;for(var i=0;i<blocks.length;i++){var block=blocks[i],lines=block.split('\n'),first=(lines[0]||'').trim();if(!first)continue;if(/^\[.+\]$/.test(first)&&lines.length<=2){html+='<div class="lyric-section-label">'+esc(first.slice(1,-1))+'</div>';continue;}if(/^repeat /i.test(first)&&lines.length<=2){if(state.chorusDisplay==='full'&&chorusLines)html+=chorusBlockHtml(chorusLines);else html+='<p class="lyric-instruction">&#8630; '+esc(block.trim())+'</p>';continue;}if(/^(chorus[\s\d]*:?|\[chorus[\s\d]*\])/i.test(first)){var content=lines.slice(1);if(!chorusLines)chorusLines=content;html+=chorusBlockHtml(content);continue;}html+='<div class="lyric-block">'+lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('')+'</div>';}return html;}
+
+/* List rendering */
+function renderList(){
+  var songs=filteredSongs(),el=document.getElementById('song-list'),meta=document.getElementById('list-meta');
+  meta.textContent=songs.length===SONGS.length?SONGS.length+' songs':songs.length+' of '+SONGS.length+' songs';
+  if(!songs.length){el.innerHTML='<div class="no-res"><div class="nr-icon">\uD83D\uDD2D</div><div>No songs found</div></div>';return;}
+  var html='';
+  for(var i=0;i<songs.length;i++){var s=songs[i],isFav=state.favourites.indexOf(s.id)>-1,icon=CAT_ICONS[s.category]||'\u266A';html+='<div class="song-card'+(isFav?' fav':'')+'" data-id="'+s.id+'"><div class="ci">'+icon+'</div><div class="cb"><div class="ct">'+esc(s.title);if(s.category==='Traditional Songs')html+='<span class="trad-badge">trad</span>';html+='</div><div class="cs">\uD83C\uDFB5 '+esc(s.tune)+'</div>';if(s.source_book)html+='<div class="cp">\uD83D\uDCD6 '+esc(s.source_book)+', p.'+s.source_page+'</div>';html+='</div><button class="cstar'+(isFav?' active':'')+'" data-fav="'+s.id+'">'+(isFav?'\u2605':'\u2606')+'</button></div>';}
+  el.innerHTML=html;
+}
+
+/* Categories — computed from SONGS each time so new categories appear automatically */
+function renderCategories(){
+  var cats=['All',...new Set(SONGS.map(function(s){return s.category;}))];
+  var el=document.getElementById('cat-tabs'),html='';
+  for(var i=0;i<cats.length;i++){var c=cats[i],label=c==='All'?'All':((CAT_ICONS[c]||'')+' '+c.split('/')[0].replace(' Songs','').replace(' Ballads','').replace(' in Progress','').trim());html+='<button class="cpill'+(state.category===c?' active':'')+'" data-cat="'+esc(c)+'">'+label.trim()+'</button>';}
+  el.innerHTML=html;
+}
+
+/* Song detail */
+function showSong(id){stopScroll();var song=null;for(var i=0;i<SONGS.length;i++){if(SONGS[i].id===id){song=SONGS[i];break;}}if(!song)return;state.currentSong=id;var tradBadge=song.category==='Traditional Songs'?'<span class="trad-badge">traditional</span>':'';var sourceRow=song.source_book?'<div class="ir source"><span>\uD83D\uDCD6</span><span>'+esc(song.source_book)+', p.'+song.source_page+'</span></div>':'';document.getElementById('song-info').innerHTML='<h1>'+esc(song.title)+tradBadge+'</h1><div class="ir"><span>\uD83C\uDFB5</span><span>'+esc(song.tune)+'</span></div><div class="ir"><span>\u270D\uFE0F</span><span>'+esc(song.words)+'</span></div>'+sourceRow;document.getElementById('lw').innerHTML=renderLyrics(song.lyrics);document.getElementById('lw').scrollTop=0;updateFavBtn();document.getElementById('list-view').style.display='none';document.getElementById('detail-view').classList.add('vis');if(state.autoScroll)startScroll();}
+function showList(){stopScroll();document.getElementById('detail-view').classList.remove('vis');document.getElementById('list-view').style.display='';state.currentSong=null;}
+function updateFavBtn(){var btn=document.getElementById('btn-fav'),isFav=state.favourites.indexOf(state.currentSong)>-1;btn.textContent=isFav?'\u2605':'\u2606';btn.classList.toggle('active',isFav);}
+function toggleFav(id){var i=state.favourites.indexOf(id);if(i===-1)state.favourites.push(id);else state.favourites.splice(i,1);saveState();renderList();if(state.currentSong===id)updateFavBtn();}
+function randomSong(){var pool=filteredSongs();if(!pool.length)return;showSong(pool[Math.floor(Math.random()*pool.length)].id);}
+
+/* Auto-scroll */
+var scrollRAF=null,scrollAccum=0;
+function startScroll(){if(!state.currentSong)return;stopScroll();state.scrollPaused=false;document.getElementById('scbar').classList.add('vis');document.getElementById('sctog').textContent='\u23F8 Pause';document.getElementById('sctog').classList.remove('pau');var last=null;function tick(ts){if(!last)last=ts;var dt=ts-last;last=ts;scrollAccum+=state.scrollSpeed*0.015*dt/16;if(scrollAccum>=1){var el=document.getElementById('lw'),px=Math.floor(scrollAccum);el.scrollTop+=px;scrollAccum-=px;if(el.scrollTop>=el.scrollHeight-el.clientHeight-2){stopScroll();return;}}scrollRAF=requestAnimationFrame(tick);}scrollRAF=requestAnimationFrame(tick);}
+function stopScroll(){if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;}document.getElementById('scbar').classList.remove('vis');}
+function pauseScroll(){if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;}state.scrollPaused=true;document.getElementById('sctog').textContent='\u25B6 Play';document.getElementById('sctog').classList.add('pau');}
+function resumeScroll(){state.scrollPaused=false;startScroll();}
+
+/* Panels */
+function openPanel(o,p){document.getElementById(o).classList.add('vis');document.getElementById(p).classList.add('vis');}
+function closePanel(o,p){document.getElementById(o).classList.remove('vis');document.getElementById(p).classList.remove('vis');}
+
+/* Settings */
+function applyFont(f){state.font=f;document.documentElement.removeAttribute('data-font');if(f!=='system')document.documentElement.setAttribute('data-font',f);document.querySelectorAll('.fbtn').forEach(function(b){b.classList.toggle('active',b.dataset.font===f);});saveState();}
+function applyFontSize(sz){state.fontSize=Math.max(12,Math.min(24,sz));document.documentElement.style.setProperty('--font-size',state.fontSize+'px');document.getElementById('size-val').textContent=state.fontSize+'px';saveState();}
+function applyChorusDisplay(v){state.chorusDisplay=v;document.querySelectorAll('.cdbtn').forEach(function(b){b.classList.toggle('active',b.dataset.cd===v);});if(state.currentSong)showSong(state.currentSong);saveState();}
+
+/* Init settings UI from saved state */
+document.getElementById('tog-chorus').checked=state.highlightChorus;
+document.getElementById('tog-scroll').checked=state.autoScroll;
+document.getElementById('sc-speed').value=state.scrollSpeed;
+document.getElementById('st-speed').value=state.scrollSpeed;
+document.getElementById('speed-row').style.display=state.autoScroll?'':'none';
+applyFont(state.font);applyFontSize(state.fontSize);applyChorusDisplay(state.chorusDisplay);
+
+/* Event listeners */
+document.getElementById('tog-chorus').addEventListener('change',function(e){state.highlightChorus=e.target.checked;if(state.currentSong)showSong(state.currentSong);saveState();});
+document.getElementById('tog-scroll').addEventListener('change',function(e){state.autoScroll=e.target.checked;document.getElementById('speed-row').style.display=state.autoScroll?'':'none';if(state.autoScroll&&state.currentSong)startScroll();else stopScroll();saveState();});
+document.getElementById('sc-speed').addEventListener('input',function(e){state.scrollSpeed=+e.target.value;document.getElementById('st-speed').value=state.scrollSpeed;});
+document.getElementById('st-speed').addEventListener('input',function(e){state.scrollSpeed=+e.target.value;document.getElementById('sc-speed').value=state.scrollSpeed;saveState();});
+document.getElementById('sctog').addEventListener('click',function(){if(state.scrollPaused)resumeScroll();else pauseScroll();});
+document.querySelectorAll('.fbtn').forEach(function(b){b.addEventListener('click',function(){applyFont(b.dataset.font);});});
+document.querySelectorAll('.cdbtn').forEach(function(b){b.addEventListener('click',function(){applyChorusDisplay(b.dataset.cd);});});
+document.getElementById('size-up').addEventListener('click',function(){applyFontSize(state.fontSize+2);});
+document.getElementById('size-down').addEventListener('click',function(){applyFontSize(state.fontSize-2);});
+document.getElementById('btn-settings').addEventListener('click',function(){openPanel('sov','spanel');});
+document.getElementById('sov').addEventListener('click',function(){closePanel('sov','spanel');});
+document.getElementById('btn-about').addEventListener('click',function(){openPanel('aov','apanel');});
+document.getElementById('aov').addEventListener('click',function(){closePanel('aov','apanel');});
+document.getElementById('btn-back').addEventListener('click',showList);
+document.getElementById('btn-rand').addEventListener('click',randomSong);
+document.getElementById('btn-drand').addEventListener('click',randomSong);
+document.getElementById('btn-fav').addEventListener('click',function(){toggleFav(state.currentSong);});
+document.getElementById('search-input').addEventListener('input',function(e){state.query=e.target.value;document.getElementById('xcbtn').classList.toggle('vis',!!state.query);renderList();});
+document.getElementById('xcbtn').addEventListener('click',function(){state.query='';document.getElementById('search-input').value='';document.getElementById('xcbtn').classList.remove('vis');renderList();});
+document.getElementById('cat-tabs').addEventListener('click',function(e){var pill=e.target.closest('.cpill');if(!pill)return;state.category=pill.dataset.cat;renderCategories();renderList();});
+document.getElementById('song-list').addEventListener('click',function(e){var fav=e.target.closest('[data-fav]');if(fav){e.stopPropagation();toggleFav(+fav.dataset.fav);return;}var card=e.target.closest('.song-card');if(card)showSong(+card.dataset.id);});
+
+/* ============================================================
+   BOOT — fetch songs.json then start the app.
+   Shows a loading spinner while waiting, and a clear error
+   message if the fetch fails (e.g. songs.json is missing).
+   ============================================================ */
+(function loadSongs(){
+  var listEl = document.getElementById('song-list');
+  var metaEl = document.getElementById('list-meta');
+
+  /* Loading state */
+  metaEl.textContent = '';
+  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading songs\u2026</span></div>';
+
+  fetch('songs.json')
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status + ' — is songs.json deployed alongside this file?');
+      return r.json();
+    })
+    .then(function(data){
+      SONGS = data;
+      renderCategories();
+      renderList();
+    })
+    .catch(function(err){
+      metaEl.textContent = '';
+      listEl.innerHTML =
+        '<div class="load-error">' +
+        '<div class="err-icon">\u26A0\uFE0F</div>' +
+        '<p>Could not load songs.</p>' +
+        '<code>' + err.message + '</code>' +
+        '<p style="margin-top:12px;font-size:.8rem;">Make sure <strong>songs.json</strong> is in the same folder as this file on Netlify.</p>' +
+        '</div>';
+    });
+})();
+</script>
+</body>
+</html>
