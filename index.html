@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>UCN Songbook</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+@font-face{font-family:'OpenDyslexic';src:url('https://cdn.jsdelivr.net/npm/opendyslexic@0.91413.1/regular/OpenDyslexic-Regular.otf') format('opentype');}
+:root{--bg:#0d1117;--surface:#1a1f26;--surface2:#242a35;--border:#30363d;--accent:#00b4d8;--accent-glow:rgba(0,180,216,0.2);--chorus-bg:rgba(245,158,11,0.12);--chorus-border:#f59e0b;--text:#e2e8f0;--text-muted:#8892a4;--text-dim:#58626e;--star:#f59e0b;--hdr:#0d1117;--tag-bg:#1e2d3a;--font-size:16px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;font-size:var(--font-size);background:var(--bg);color:var(--text);}
+[data-font="exo"] *{font-family:'Exo 2',sans-serif!important;}
+[data-font="dyslexic"] *{font-family:'OpenDyslexic',sans-serif!important;letter-spacing:.05em;word-spacing:.1em;line-height:1.8!important;}
+#app{display:flex;flex-direction:column;height:100vh;}
+.hdr{background:var(--hdr);border-bottom:2px solid var(--accent);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10;}
+.hdr::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 15% 35%,rgba(255,255,255,.4) 0%,transparent 100%),radial-gradient(1px 1px at 40% 65%,rgba(255,255,255,.25) 0%,transparent 100%),radial-gradient(1px 1px at 72% 28%,rgba(255,255,255,.35) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 58% 52%,rgba(0,180,216,.6) 0%,transparent 100%);}
+.hdr-l{display:flex;align-items:center;gap:10px;z-index:1;}.hdr-r{display:flex;align-items:center;gap:6px;z-index:1;}
+.logo{height:38px;width:auto;}.site-title{font-size:1.05rem;font-weight:700;color:#e2e8f0;letter-spacing:.04em;}
+.ibtn{background:none;border:none;color:var(--text-muted);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.15rem;transition:color .2s,background .2s;}
+.ibtn:hover,.ibtn.active{color:var(--accent);background:var(--surface2);}
+#list-view{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+.sw{padding:12px 16px 8px;flex-shrink:0;}
+.sb{display:flex;align-items:center;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;transition:border-color .2s;}
+.sb:focus-within{border-color:var(--accent);}
+.si{color:var(--text-muted);font-size:1rem;}
+.sinp{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1rem;padding:10px 0;font-family:inherit;}
+.sinp::placeholder{color:var(--text-dim);}
+.xcbtn{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;display:none;align-items:center;font-size:.9rem;}
+.xcbtn.vis{display:flex;}
+.cw{padding:0 16px 8px;flex-shrink:0;}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cpill{flex-shrink:0;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.cpill.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+.cpill:not(.active):hover{border-color:var(--accent);color:var(--accent);}
+.lmeta{padding:0 16px 6px;color:var(--text-dim);font-size:.75rem;flex-shrink:0;}
+.slist{flex:1;overflow-y:auto;padding:0 16px 80px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.slist::-webkit-scrollbar{width:4px;}.slist::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.song-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;padding:12px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .1s;display:flex;align-items:center;gap:12px;border-left:3px solid transparent;}
+.song-card:hover{border-left-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow);}
+.song-card:active{transform:scale(.98);}.song-card.fav{border-left-color:var(--star);}
+.ci{width:36px;height:36px;border-radius:8px;background:var(--tag-bg);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;}
+.cb{flex:1;min-width:0;}.ct{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cs{font-size:.75rem;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cp{font-size:.7rem;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cstar{color:var(--text-dim);font-size:1.1rem;flex-shrink:0;padding:6px;background:none;border:none;cursor:pointer;}
+.cstar.active{color:var(--star);}
+.no-res{text-align:center;padding:40px 16px;color:var(--text-muted);}.nr-icon{font-size:2.5rem;margin-bottom:12px;}
+#detail-view{display:none;flex-direction:column;flex:1;overflow:hidden;}#detail-view.vis{display:flex;}
+.dbar{padding:0 8px;height:48px;display:flex;align-items:center;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);}
+.bbtn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;padding:8px;border-radius:8px;}
+.bbtn:hover{background:var(--surface2);}.dact{margin-left:auto;display:flex;gap:4px;}
+.sinfo{padding:16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sinfo h1{font-size:1.2rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
+.ir{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:.8rem;color:var(--text-muted);}
+.ir.source{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;}
+.lw{flex:1;overflow-y:auto;padding:20px 16px 100px;scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.lw::-webkit-scrollbar{width:4px;}.lw::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.lyric-block{margin-bottom:20px;}.lyric-block p,.lyric-chorus p{line-height:1.75;margin-bottom:1px;font-size:var(--font-size);}
+.lyric-chorus{background:var(--chorus-bg);border-left:3px solid var(--chorus-border);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:20px;}
+.lyric-chorus.no-highlight{background:none;border-left:none;padding-left:0;margin-bottom:20px;}
+.chorus-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--chorus-border);margin-bottom:6px;}
+.no-highlight .chorus-label{display:none;}
+.lyric-instruction{text-align:center;color:var(--text-dim);font-style:italic;font-size:.85rem;margin-bottom:16px;padding:4px;}
+.lyric-section-label{color:var(--accent);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:4px 0;}
+.trad-badge{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:rgba(0,180,216,0.15);color:var(--accent);border:1px solid rgba(0,180,216,0.3);margin-left:6px;vertical-align:middle;}
+.scbar{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;display:none;align-items:center;gap:10px;z-index:20;}
+.scbar.vis{display:flex;}.scbar label{font-size:.8rem;color:var(--text-muted);white-space:nowrap;}.scbar input{flex:1;accent-color:var(--accent);}
+.sctog{background:var(--accent);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:.8rem;font-weight:600;cursor:pointer;}
+.sctog.pau{background:var(--surface2);color:var(--text);}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:30;display:none;backdrop-filter:blur(2px);}
+.overlay.vis{display:block;}
+.panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;z-index:31;padding:20px 20px 40px;transform:translateY(100%);transition:transform .3s ease;overflow-y:auto;max-height:85vh;}
+.panel.vis{transform:translateY(0);}.sh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.stitle{font-size:1rem;font-weight:700;margin-bottom:20px;text-align:center;}
+.srow{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}.slabel{font-size:.9rem;}
+.tog{position:relative;width:44px;height:24px;}.tog input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
+.tslider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
+.tog input:checked+.tslider{background:var(--accent);}.tog input:checked+.tslider::before{transform:translateX(20px);}
+.fbtns{display:flex;gap:8px;flex-wrap:wrap;}
+.fbtn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:all .2s;}
+.fbtn.active{border-color:var(--accent);color:var(--accent);background:var(--tag-bg);}
+.szw{display:flex;align-items:center;gap:10px;}
+.szbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
+.szbtn:hover{border-color:var(--accent);color:var(--accent);}
+.szval{font-size:.85rem;color:var(--text-muted);min-width:32px;text-align:center;}
+.spw{display:flex;align-items:center;gap:8px;flex:1;}.spw input{flex:1;accent-color:var(--accent);}
+.spl{font-size:.8rem;color:var(--text-muted);}
+.about-section{padding:14px 0;border-bottom:1px solid var(--border);}.about-section:last-child{border-bottom:none;}
+.about-section h3{font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:8px;}
+.about-section p{font-size:.85rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.about-section p:last-child{margin-bottom:0;}
+.about-logo{display:flex;justify-content:center;margin-bottom:14px;}.about-logo img{height:56px;width:auto;opacity:.9;}
+.disclaimer-box{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;margin-top:4px;}
+.disclaimer-box p{font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.disclaimer-box p:last-child{margin-bottom:0;}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.scbar{padding-bottom:calc(10px + env(safe-area-inset-bottom));}.panel{padding-bottom:calc(40px + env(safe-area-inset-bottom));}}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     SONG DATA
+     ============================================================
+     All 71 songs are stored below in a JSON array inside this
+     special <script type="application/json"> block. The browser
+     ignores it as code — it's just data. The app reads it with:
+       JSON.parse(document.getElementById('songs-data').textContent)
+
+     WHY THIS APPROACH?
+     Keeping songs here (rather than mixed into the JavaScript)
+     means you can add or edit songs without touching any app code.
+     Just find this block, make your change, save the file.
+
+     HOW TO ADD A SONG
+     Use the companion generator tool to produce a correctly
+     formatted entry, then paste it before the closing ] below.
+     Each entry must be separated from the previous one by a comma.
+
+     SONG OBJECT FIELDS
+     Every song object has these fields:
+
+       "id"          — Unique number. Always increment from the last.
+                       Next available ID: 72
+
+       "title"       — Song title as it appears in the app.
+
+       "category"    — Must exactly match one of:
+                         Patriotic Songs
+                         Bar/Drinking Songs
+                         Crew Ballads
+                         Accompanied Songs
+                         Songs About Us
+                         Fragments and Works in Progress
+                         Traditional Songs
+                         Movie/TV
+                         Improvised Songs
+
+       "words"       — Lyric author / credit line.
+
+       "tune"        — The original tune this is sung to,
+                       e.g. "Jerusalem; Hubert Parry"
+
+       "lyrics"      — The full lyrics as a single string.
+                       Use \n for a new line.
+                       Use \n\n for a blank line between verses.
+                       Special formatting markers:
+                         Chorus:      — starts a highlighted chorus block
+                         Repeat chorus — renders as an italic repeat marker
+                         [Label]      — renders as a cyan section label
+                                        e.g. [Verse 1] or [Refrain]
+
+       "source_book" — Physical booklet the song appears in,
+                       e.g. "UCN Songbook" or "Traditional Songs".
+                       Use null if the song has no source book.
+
+       "source_page" — Page number in that booklet (a number).
+                       Use null if there is no source book.
+
+     EXAMPLE ENTRY
+     ,{
+       "id": 72,
+       "title": "My New Song",
+       "category": "Bar/Drinking Songs",
+       "words": "Sub Lt Tetra",
+       "tune": "Original Tune; Composer",
+       "lyrics": "Verse one line one\nVerse one line two\n\nChorus:\nChorus line one\nChorus line two\n\nRepeat chorus",
+       "source_book": null,
+       "source_page": null
+     }
+     ============================================================ -->
+<script type="application/json" id="songs-data">
+[
+  {
+    "id": 1,
+    "title": "And Did Those Fleets",
+    "category": "Patriotic Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Jerusalem; Hubert Parry",
+    "lyrics": "And did those fleets in ancient time\nWarp into Gliese's system belt:\nAnd was the gravium they found\nThe source of renewed hope they felt\n\nAnd did the mining ships of old\nDig deep into the asteroids\nAnd was Xanadu builded here\nAs people spread across the void\n\nAttune our beams of burning light\nLoad our tubes with HVLIs\nSet all our shield frequencies right\nBring us in range and prep to fire!\n\nWe will not cease from astral fight\nNor from our solemn duty hide\nUntil humanity safely sleeps\nIn Sol and Gliese all system-wide",
+    "source_book": "UCN Songbook",
+    "source_page": 3
+  },
+  {
+    "id": 2,
+    "title": "Forward, UCN",
+    "category": "Patriotic Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Men of Harlech; trad",
+    "lyrics": "Tongues of fire from stellar flaring\nNews of foemen near declaring\nTo heroic deeds of daring\nCall you, UCN\n\nGroans of wounded people dying\nWails of parents and kids flying\nFor the distant succour crying\nCall you, UCN\n\nShall the voice of wailing\nNow be unavailing\nYou to rouse who never yet\nIn battle's hour were failing\n\nThis our answer, ships in warping\nSwift as stellar winds a-roaring\nNot in vain the voice imploring\nCalls the UCN\n\nLoud the red alert is sounding\nHearts of every crew are bounding\nCaptains briefing plans astounding\nFly we, UCN\n\nShort, the sleep the foe is taking\nEre the morrow's morn is breaking\nThey shall have a rude awakening\nFrom the UCN",
+    "source_book": "UCN Songbook",
+    "source_page": 3
+  },
+  {
+    "id": 3,
+    "title": "Song of the Frontline",
+    "category": "Patriotic Songs",
+    "words": "Lt. Lefe Grds",
+    "tune": "Heart of Oak; William Boyce",
+    "lyrics": "Come, cheer up, my crew, 'tis to glory we steer\nTo add something new to this wonderful year;\nTo honour we call you, the best of our race\nFor who are so free as those out here in space\n\nChorus:\nHulls of steel are our ships,\nOf the bold UCN\nWe always stand ready - steady, crew, Steady!\nWe'll fight and we'll beat 'em again and again\n\nWe ne'er see our foes across the vastness of space\nThey never see us as they don't dare to face\nIf they run, why we follow at warp factor 3\nFor the chase is an action we all love to see\n\nRepeat chorus\n\nThey say they'll invade us, our bold enemies,\nThe pirates, rogue factions and UVPs,\nBut if they in their hulls plan any attack\nWe of this task group will push them right back\n\nRepeat chorus\n\nWe still make them fear and we still make them flee\nWe'll meet them in space to beat easily\nThen cheer up my crew with this message to send\nOur cadets, our captains to our president\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 4
+  },
+  {
+    "id": 4,
+    "title": "The Cobalt Flag",
+    "category": "Patriotic Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "O Tannenbaum; trad (AKA The Red Flag)",
+    "lyrics": "The UCN flag flies in space\nA symbol of the human race\nIn venturing we shall be bold\nThrough void of space both dark and cold\n\nChorus:\nSo let the Cobalt Banner fly\nFrom star to star across the sky\nWhat perils face us we don't know\nIn the beyond where we must go\n\nFrom many nations of the Earth\nConfederation had its birth\nThen Luna, moving on to Mars\nAnd then beyond to reach the stars\n\nRepeat chorus\n\nFor friends we find across the belt\nFelicitations truly felt\nWith efforts bold and allies true\nWe proudly fly our banner blue\n\nRepeat chorus\n\nFrom nebula storm or astral rocks\nWe'll brook no temporal paradox\nEvents must happen now and then\nWe'll do before what's done again\n\nRepeat chorus\n\nAcross the void our ships shall range\nLocating dangers dire and strange\nTime and again our crews come back\nTo face what lurks out in the black\n\nRepeat chorus\n\nWe came for peace, prepared for war\nWe face a foe like none before\nOn this we are all of one mind\nWe'll leave no officer behind\n\nRepeat chorus\n\nThough war has cost us many a friend\nWe will not falter, break or bend\nUnwavering we all shall be\nWe fight for all humanity\n\nRepeat chorus\n\n[Unofficial Extra Verse]\nThe President has words in store\nWe've heard them many times before\nIt's gravium we seek of course\nIt is a limited resource\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 5
+  },
+  {
+    "id": 5,
+    "title": "The Fleet",
+    "category": "Patriotic Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Marching Through Georgia; Henry Clay Work",
+    "lyrics": "Sound the call to battle stations, sound it far and wide\nFlanks speed forth to combat now, our crewmates by our side\nOur enemies will flee in vain, there's nowhere they can hide\nFrom the fleet that fights for all peoples\n\nChorus:\nThe fleet, the fleet\nIt's Roger Taylor's fleet\nThe fleet, the fleet\nA force that can't be beat\nWe've orders to defend the belt, no chance of a retreat\nBy the fleet that fights for all peoples\n\nHark! The signals coming from the east and from the west\nOur allies now are warping in, we fight with renewed zest\nUnited we shall stand together, formed up from the best\nAs a fleet that is drawn from all peoples\n\nRepeat chorus\n\nWe stand foursquare for liberty, all peoples must be free\nNone of us shall falter from the fight, tho' stern it be\nAnd the Cobalt Flag we love shall fly for all to see\n'Cross a belt that is free for all peoples\n\nRepeat chorus\n\nThe fleet, it now is charging on, the battle to begin,\nOur voices now are raised on high above the battle's din,\nWe'll never cease from fighting 'til the victory we win,\nAnd the belt is free for all peoples\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 6
+  },
+  {
+    "id": 6,
+    "title": "Those In Peril In the Void",
+    "category": "Patriotic Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Eternal Father, Strong to Save; John Bacchus Dykes",
+    "lyrics": "Oh noble comrades, bold and brave\nWho seek those souls that we must save\nPatrolling throughout charted space\nProtectors of the human race\nOur duty we shall not avoid\nTo those in peril in the void\n\nAs dangerous forces now appear\nAnd innocents call out in fear\nUnwavering, our crews respond\nThe cry of all to Go Beyond\nOur duty we shall not avoid\nTo those in peril in the void\n\nSo many stations they assail\nDivided we cannot prevail\nWhere once were factions, now you see\nWe fight as one to keep us free\nOur duty we shall not avoid\nTo those in peril in the void\n\nThough vicious forces now attack\nThe UCN will drive them back\nFrom cell to cell our fleet will win\nUVPs out, the Navy in\nThe frontline's where we'll be deployed\n'til freedom reigns across the void",
+    "source_book": "UCN Songbook",
+    "source_page": 7
+  },
+  {
+    "id": 7,
+    "title": "Auld Lang Syne",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor (adapted from Robert Burns)",
+    "tune": "Auld Lang Syne; trad",
+    "lyrics": "Should old acquaintance be forgot\nAnd never brought to mind\nShould old acquaintance be forgot\nAnd auld lang syne?\n\nChorus:\nFor auld lang syne, my dear\nFor auld lang syne\nWe'll take a tot of kindness yet\nFor auld lang syne\n\nAnd surely you'll buy your rum tot\n(Unless they're out of lime)\nAnd we'll take a tot o' kindness yet\nFor auld lang syne\n\nRepeat chorus\n\nWe crew have warped about these skies\nAnd seen such sites sublime\nBut we've travelled many a parsec cold\nSince auld lang syne\n\nRepeat chorus\n\nWe crew have faced foes bold and strange\nAcross all space and time\nBut we've been scattered 'cross the void\nSince auld lang syne\n\nRepeat chorus\n\nAnd there's a hand my trusty friend\nAnd give me a hand o' thyne\nAnd we'll take a right good-will draught\nFor auld lang syne\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 8
+  },
+  {
+    "id": 8,
+    "title": "Ballad of the UCS Havock",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Deverell",
+    "tune": "Blood on the Risers; trad",
+    "lyrics": "He was just a rookie ensign, fresh off the transporter pad\nHe boarded the starship Havock, with adventures to be had\nThe captain, brave and grizzled, gave a nod and a sly wink,\nHe'll be back to the belt for sure!\n\nChorus:\nGlory, glory, Havock's a hell of a ship to fly,\nGlory, glory, Havock's a hell of a ship to fly,\nGlory, glory, Havock's a hell of a ship to fly,\nHe'll be back to the belt for sure!\n\nThe plucky crew they cheered him, as he strapped into his seat,\nA new adventure waiting, a brand-new foe to meet.\nThey set a course and jumped to warp, the stars began to blur,\nHe'll be back to the belt for sure!\n\nRepeat chorus\n\nAs they travelled through the Adamas Belt the pirates laid their evil trap,\nThe Havock's shields were tested, with nary time to nap.\nThe battle raged and cannons roared, a fight to hold their ground,\nHe'll be back to the belt for sure!\n\nRepeat chorus\n\nThe warp core starts to shudder, with a blinding flash of red,\n\"Shields Down!\" cried the ensign, filled with growing sense of dread.\nThey wrestled with the systems, as the sparks began to fly,\nHe'll be back to the belt for sure!\n\nRepeat chorus\n\nWith skill and steady courage, the ensign saved the day,\nThe Havock limped to safety, escaping from harm's way.\nThe captain looked upon his crew with a proud and knowing grin,\nHe'll be back to the belt for sure!\n\nRepeat chorus\n\nBack on board the Warspite, where the dispatches were read\nA shiny new promotion, upon the ensign's head.\nFrom rookie to Lieutenant, a hero through and through,\nHe'll be back to the belt for sure!",
+    "source_book": "UCN Songbook",
+    "source_page": 9
+  },
+  {
+    "id": 9,
+    "title": "Battle Hymn of the UCN",
+    "category": "Bar/Drinking Songs",
+    "words": "Callum \"Face\" Fraser",
+    "tune": "Battle Hymn of the Republic; trad",
+    "lyrics": "We are the Warspite Task Group and we always do our best\nWe can fly and fight and explore and we hardly need to rest\nAnd when we've done our crewing we stick medals to our vest\nAnd we'll just keep flying on...\n\nChorus:\nGlory to the UCN\nGlory to the UCN\nGlory to the UCN\nAnd we'll always Go Beyond!\n\nWe have the Takanami, she's a big ship strong and true\nBut you want to go quickly we've a sorry tale for you\nBut why people dislike her, why we haven't got a clue\nSo we'll just keep flying on...\n\nRepeat chorus\n\nWe've also got the Havock, she's a fast ship of the fleet\nAnd the railings on the bridge help keep the Captain in their seat\nBut while she is not that powerful, she still is really neat\nAnd we'll just keep flying on...\n\nRepeat chorus\n\nOur friends are Terra Novans they are nice and kind and fair\nWe don't know where their planet is, and we don't really care\nBecause they make such lovely food they always like to share\nSo we'll just keep flying on...\n\nRepeat chorus\n\nThen there's the Grey Hat Hackers they're a nasty piece of work\nTheir drones are real annoying and their Boss talks like a jerk\nSo we'll blow up all their ships and we will do it with a smirk\nThen we'll just keep flying on...\n\nRepeat chorus\n\nThere's the scary Cult of Torment, they like throwing things to space\nThey really are quite crazy and we'll say it to their face\nBecause killing people's not on so we'll put them in their place\nAnd we'll just keep flying on...\n\nRepeat chorus\n\nWe hang out in the Mess to get some lovely R&R\nBut the coinage of an officer don't really stretch that far\nSo we play games, laugh and sing and order nice drinks from the bar\nThen we'll just keep flying on...\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 10
+  },
+  {
+    "id": 10,
+    "title": "Bones in the Void",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Raven",
+    "tune": "Bones in the Ocean; The Longest Johns",
+    "lyrics": "Oh, I bid farewell to the yards and to Mars\nAnd I fly away from the Earth and the Sun\nTo search for those we have gone lost to the void\nTo search for the place I hear all spacers end\n\nAs the souls of the dead fill the space of my mind\nI'll search without sleeping 'til peace I can find\nI fear not the storms, I fear not the void\nI remember the fallen, do they think of me?\nWhen their bones in the long dark forever will be\n\nPlot a course to the belt to a place I once knew\nTo a place where my hope died along with my crew\nSo I swallow my grief and face life's final test\nTo find promise of peace and the solace of rest\n\nAs the songs of the dead fill the space of my ears\nTheir laughter like children, their beckoning cheers\nMy heart longs to join them, sings songs in the mess.\nI remember the fallen, do they think of me?\nWhen their bones in the long dark forever will be\n\nWhen at last before my ghostly crew there I stand\nI shed a small tear for my home far away\nThough their eyes show a darkness of struggle and strife\nTheir smiles below say I don't owe them my life\n\nAs the souls of the dead fill the space of my eyes\nAnd my ship vents the atmo and gives its goodbyes\nI'm this far from floating, right into the void\nI remember the living, do they think of me?\nWhen my bones in the long dark forever will be\n\nNow that I'm staring right into the darkest abyss\nI'm not sure what I want, but I don't think it's this\nAs my comrades call to stand fast and forge on\nI make haste for the fleet till the darkness has gone\n\nAs the souls of the dead live for'er in my mind\nAs I live all the years that they left me behind\nI'll stay on the ship but still gaze at the void\nI remember the fallen and they think of me\nFor our souls in the long dark together will be\n\nI remember the fallen and they think of me\nFor our souls in the long dark together will be",
+    "source_book": "UCN Songbook",
+    "source_page": 11
+  },
+  {
+    "id": 11,
+    "title": "Cry Havock",
+    "category": "Bar/Drinking Songs",
+    "words": "Dr. O. Nightingale MD",
+    "tune": "Any fitting the Common Metre",
+    "lyrics": "The Havock is a noble ship,\nA ship of high renown,\nThe darling of the UCN,\nThe jewel in the crown,\nThe pride of every engineer,\nThe captain's favourite craft,\nDestroyers try to pass her\nAnd all we do is laugh!\n\nChorus:\n(And it's)\nStrike swift, strike sure,\nWheel about, come in again and\nStrike hard, strike true\nAnd send them on their way.\n\nPirates come for plunder,\nThey think they've won their prize\nBut the Havock's right behind them\nWhat a terrible surprise!\nSpringing from the nebula,\nWith thunder in her eye,\nYou can see the starlight glinting,\nYou can hear the gunners' cry!\n\nRepeat chorus\n\nAnd when we're on Arcadia\nThe bars kick up a fuss\nYou've never seen what Havock means\nUntil you've drunk with us,\nBut when they say 'why won't you stay?'\nWe all reply 'What for?\nWe Havocks all are barking mad\nCos we're the dogs of war!'\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 12
+  },
+  {
+    "id": 12,
+    "title": "Deep Space Submarine",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Yellow Submarine; Lennon, McCartney",
+    "lyrics": "When we're damaged in a fight\nit upsets the engineer\nbut the risk we might implode\nmeans they'll do what they most fear\n\nOnce the switch has been engaged\nwe'd better hope we don't have to flee\n'coz without a quantum drive\nour top speed is strictly sub-c\n\nChorus:\nWe're all stuck in a deep space submarine\na deep space submarine, a deep space submarine\nWe're all stuck in a deep space submarine\na deep space submarine, a deep space submarine\n\nSo we're floating here in space\nhanging out with nowhere to go\nhow we wish we'd brought some games\nwhile we're waiting for a tow\n\nRepeat chorus\n\nBut at least we should be glad\nthat the designers installed some beds\nwe would have a crummy time\nwith nowhere to rest our heads\n\nRepeat chorus\n\nSo I hope we brought some snacks\nor we're really up the creek\nwe're all stuck out here alone\nuntil we're picked up sometime next week\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 13
+  },
+  {
+    "id": 13,
+    "title": "(Do Not) Pull the Lever",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Leave Her, Johnny, Leave Her; trad",
+    "lyrics": "At the heart of the ship there's a crucial site\nLever, it's a lever\nAnd the ensigns want to know what it's like\nBut please do not pull the lever\n\nChorus:\nDo not pull the lever,\nOh do not pull the lever\nFor the voyage is long if you're at sublight\nWhich you'll be if you pull the lever\n\nOur TO pointed at this control:\n\"Lever, it's the lever\"\n\"You should fix the drive if it's going to blow\"\n\"But please do not pull the lever\"\n\nRepeat chorus\n\nWhen J.U.D.I.T.H. alerts please do not take fright\nDo not pull the lever\nJust switch the right switches, it'll be all right\nBut please do not pull the lever\n\nRepeat chorus\n\nIf the countdown's low and the drive's awry\nMaybe pull the lever\n'Cause if it implodes then we all might die\nSo it's time to pull the lever\n\nLever, pull the lever\nOh lever, pull the lever\nAnd the aft of the ship fills with safety smoke\nWhen you pull the lever",
+    "source_book": "UCN Songbook",
+    "source_page": 14
+  },
+  {
+    "id": 14,
+    "title": "Don't Explode",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Raven",
+    "tune": "Let it Snow; Jule Styne",
+    "lyrics": "Oh, the pirates outside are frightful,\nBut our missiles are so delightful,\nAnd since we're out on our own,\nDon't explode, Don't explode, Don't Explode\n\nCrew, they don't show signs of stopping\nAnd the warp core is almost popping,\nRed Alert is in full effect\nDon't explode, Don't Explode.\n\nWith our beams going at full might,\nAnd the impulse pushed to its peak\nIt makes for an interesting flight,\nBut the power levels look quite bleak\n\nNow their shields are slowly dying,\nAnd my crew, we're still surviving\nAs long we send them going,\nAnd Don't explode, Don't Explode, Don't Explode\n\nAs we finally turn the tide,\nAs they try to run to that moon\nWe'll give them a full broadside\nAnd be back at the Warspite so soon,\n\nAnd the pirates are finally done,\nBut not all of our damage is gone,\nJust as long our Chief works on,\nWe won't explode, won't explode, won't explode",
+    "source_book": "UCN Songbook",
+    "source_page": 15
+  },
+  {
+    "id": 15,
+    "title": "Fleet Admiral",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Janeiac",
+    "tune": "Rebel Yell; Billy Idol",
+    "lyrics": "Last night we went soaring, soaring through deep space\nLast night we were wowed by this former Intelligence ace\nShe said \"Don't you dare eject the warp core\"\nUnless core implosion is dangerously close.\n\nChorus:\nWho should get promoted? We cried \"Moore, Moore, Moore!\"\nNever stop promoting Freddie Moore, Moore, Moore.\nTo the top of the UCN, Moore, Moore, Moore!\nThere's none we trust more than Freddie Moore, Moore, Moore.\nMoore, Moore, Moore!\n\nShe's the thoroughly capable, she knows what to do.\nAnd if it came to it she'd risk life for her crew.\nShe does the right thing, she won't get us scammed.\nShe does the right thing, Intelligence be damned.\n\nRepeat chorus\n\nWe fly on our own missions\nGot the clear to go from ship's physician.\nWe'll fly all night follow an ICM hunch.\nJust as long, just as long we're back for lunch.\n\n[Kazoo solo]\n\nWho trains the best, it's Freddie.\nWho's trained them all, it's Freddie.\nWho did the right thing, it's Freddie.\nA million times, it's Freddie.\nWe fly with you, it's Freddie.\nWe've mad respect for Freddie.\nNothing but respect for Freddie.\nWe give our all, for Freddie.\nJust to, just to, just to, just to, have you make it to the top.\n\nRepeat chorus\n\nOh yeah promote Freddie\nThe best we've got\nMoore, Moore, Moore, Moore, Moore (Moore)\n\nCome on promote Freddie\nShe deserves more\nMoore, Moore, Moore, Moore, Moore (Moore)",
+    "source_book": "UCN Songbook",
+    "source_page": 16
+  },
+  {
+    "id": 16,
+    "title": "Fly Again",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "The Mary Ellen Carter; Stan Rogers",
+    "lyrics": "She was boarded during Wargames, she was wracked by Uvie beams\nThe skipper gave themselves up, to thwart their evil schemes\nA sense of duty unsurpassed, they knew they had to go\nTheir loss had dealt us all a mighty blow\n\nThe evacuation shuttles launched, though some marines were lost\nMost of the crew was safe then, but still we count the cost\nAnd when we heard the Herald's voice, it caused us to proclaim\nThat the Falchion and her captain'll fly again\n\nNow Hamilton's beloved, there's no price that we won't spend\nAfter such distinguished service, we won't let this be their end\nBut with frontline battles raging, from Horizon to Sca Fell\nWe've got to fight the wider war as well\n\nBut we talked of them on CommsNet, every day around the clock\nWe need to get them back and then to Harden and the docs\nAnd with every jar that hit the bar, we swore we would remain\nAnd make sure Falchion and her captain fly again\n\nChorus:\nFly again, fly again!\nLet their names be ever spoken throughout the UCN\nThose who love them best and will be with 'em 'til the end\nWill make sure Falchion and her captain fly again\n\nThe Falchion's at Kalgoorlie now, her hull all warped and bent\nThree shifts a day are working on her, not to mention Dent\nBut even if we're short on parts, and fixing her is slow\nOur plan to rescue Hamilton's a go\n\nThe intel's sound, crews inbound, the Tak and Havock prepped\nThe Herald's ship's been spotted and we're poised to intercept\nTomorrow then, our ships deploy, our mission here is plain\nTo make sure Falchion and her captain fly again\n\nRepeat chorus\n\nWe couldn't leave them there, you see, transformed and as a slave\nThey've saved our lives so many times, a captain bold and brave\nAnd the alien foes who kidnapped them, and carried them away\nWill find they've made a grave mistake today\n\nAnd you, to whom adversity has dealt the final blow\nWith vicious bastards shooting at you everywhere you go\nTurn to, and put out all your strength of arm and heart and brain\nAnd like the Falchion and her captain, fly again\n\nFly again, fly again!\nThough your heart it be broken, or life about to end\nNo matter what you've lost, be it a home, a love, a friend\nThen like the Falchion and her captain fly again\n\nFly again, fly-y-y again!\nThough your heart it be broken, or life about to end\nNo matter what you've lost, be it a home, a love, a friend\nLike the Falchion and her captain fly again",
+    "source_book": "UCN Songbook",
+    "source_page": 17
+  },
+  {
+    "id": 17,
+    "title": "Garotte's Buccaneers",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. \"Toast\" Ray",
+    "tune": "Barrett's Privateers; Stan Rogers",
+    "lyrics": "O the year was twenty one eighty two\nHow I wish I was on Xanadu now\nA letter of marque came from the Gliese\nTo the scummiest vessel I've ever seen\n\nChorus:\nGod damn them all\nI was told we'd cruise the belt for lost Jasa gold\nWe'd fire no beams, shed no tears\nNow I'm a broken man with no cocktail here\nThe last of Garotte's Buccaneers\n\nO Elcid Garotte cried the town\nHow I wish I was on Xanadu now\nFor 20 good spacers void trained who\nWould make for him the Antelope's crew\n\nRepeat chorus\n\nThe Antelope sloop was a sickening sight\nHow I wish I was on Xanadu now\nShe'd list to the port and a deck that sags\nAnd the cook in the scuppers with the staggers and jags\n\nRepeat chorus\n\nOn Alta's birthday we put to space\nHow I wish I was on Xanadu now\nToo many hours to find our prey\nJuggling coolant all the way\n\nRepeat chorus\n\nWhen the second watch woke we sailed again\nHow I wish I was on Xanadu now\nWhen a UCN freighter hove in sight\nWith our cracked torp-tubes we made to fight\n\nRepeat chorus\n\nThe UCN weighed down with tin\nHow I wish I was on Xanadu now\nShe was broad and fat and slow as heck\nAnd to catch her took the Antelope two parsecs\n\nRepeat chorus\n\nThen at length she stood two sectors away\nHow I wish I was on Xanadu now\nOur cracked torp tubes made awful din\nWith one fat missile they stove us in\n\nRepeat chorus\n\nThe Antelope shook and pitched on her side\nHow I wish I was on Xanadu now\nGarotte was smashed like a bowl of eggs\nA lethal beam carried off both me legs\n\nRepeat chorus\n\nNow here I lay in my twenty-third year\nHow I wish I was on Xanadu now\nIt's been two months since we sailed away\nAnd I just made Roma yesterday\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 19
+  },
+  {
+    "id": 18,
+    "title": "Hey J.U.D.I.T.H",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Hey Jude; Lennon-McCartney",
+    "lyrics": "Hey J.U.D.-I.T.H., don't be mad\nHere's some coolant to make it better\nThe engin-eers have got the spare parts\nAnd they will start to make it better\n\nHey J.U.D.-I.T.H., don't be 'fraid\nYou were made to keep us safe here\nWhen crystals regenerate on your plinth\nThen you begin to make it better\n\nAnd any time the crew exclaim, \"J.U.D.I.T.H., refrain\"\ndon't give too much weight to their moaning.\nFor well you know that it's a fool who can't keep cool\nJust because power conduits smoulder\n\nNa na na nananana, nannana\n\nHey J.U.D.-I.T.H., shields are down\nWe're low power, need a new fuel cell\nWe'll get one, and swap it into your heart\nThen you can start to make it better.\n\nWith smoky air and sparks flying, J.U.D.I.T.H., begin,\nYou're waiting for someone to repair with.\nAnd don't you know that it's just you, J.U.D.I.T.H., you'll do,\nThe fuses we need are in your lockers.\n\nNa na na nananana, nannana\n\nHey J.U.D.-I.T.H., don't be mad\nHere's some coolant to make it better\nWhen crystals regenerate on your plinth\nThen you begin to make it\n\nBetter better better better better better, oh.\n\nNa na na nananana, nannana, hey Jude...\n(repeat and fade)",
+    "source_book": "UCN Songbook",
+    "source_page": 20
+  },
+  {
+    "id": 19,
+    "title": "I Stole the Takanami (For Educational Purposes Only)",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Janeiac",
+    "tune": "Bully in the Alley; trad",
+    "lyrics": "How, how do I fly the Takanami?\n(The question's real, I stole the Takanami)\nClose the airlock, make sure it's fully sealed.\n(I stole the Takanami)\nUndock from Warspite and manoeuvre her at impulse.\n(I stole the Takanami)\nGet a bearing from nav and set yourself a course in.\n(I stole the Takanami)\nPush to warp one and watch the lines streaking.\n(I stole the Takanami)\nCheck the heat, warp drive will need some coolant\n(I stole the Takanami)\nIncrease to warp 2 and hear the engine purrin'\n(I stole the Takanami)\nDon't mind JUDITH if you're burning through power\n(I stole the Takanami)\nCome out of warp afore you hit your destination\n(I stole the Takanami)\nOpen up comms and request for docking.\n(I stole the Takanami)\nWith impulse engines manoeuvre til docking's ready.\n(I stole the Takanami)\nAuto dock then it's time to get the drinks in\n(I stole the Takanami)\n(I stole the Takanami)",
+    "source_book": "UCN Songbook",
+    "source_page": 21
+  },
+  {
+    "id": 20,
+    "title": "Into the Void",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Raven",
+    "tune": "Into the West; Annie Lennox, Howard Shore",
+    "lyrics": "Lay down\nYour sweet and weary head\nNight has fallen\nYou have come to journey's end\nSleep now\nAs you meet the ones who came before\nThey are calling\nFrom beyond the stars\n\nPlease do not weep\nHave not these tears upon your face?\nFor you were brave\nFor you braver than you know\nSibling in arms\nYou can sleep long now\n\nChorus:\nWhat can you see\nOut in those stars?\nWhat was your call to explore?\nAcross the void\nThe nebula gleam\nThe ships have come to carry you home\n\nAnd all will turn\nBack to stardust\nA light in the darkness\nAll souls pass\n\nSet sail\nInto the world of night\nThrough darkness falling\nOut of scanner range and sight\n\nDon't say\nWe have come now to the end\nThe unknown's calling\nYou and I will meet again\nBeloved sibling in arms\nJust sleep now\n\nRepeat chorus\n\nAnd all will turn\nBack to stardust\nA light in the darkness\nBlue ships pass\n\nInto the void",
+    "source_book": "UCN Songbook",
+    "source_page": 22
+  },
+  {
+    "id": 21,
+    "title": "Join Me, My Friends",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Raven",
+    "tune": "Wander My Friends; Bear McCreary",
+    "lyrics": "[v1 - Arrival at Gliese 667Cc]\n\nJoin me my friends, join with me.\nAs we fly ever on, from that we know\nAway from our homes, on land or in space\nLet us sing for those gone far behind us\n\nFor all of that beauty and joy we left\nWild blue oceans, and stars above\nFor all those we knew, and those that won't\nWe sing of our hope that something must go on\n\nJoin me my friends, join with me\nAs we fly ever on, from that we know\nAway from our homes, to something new\nLet our song give us hope for we must press on,\n\nJoin me my friends, join with me, in song\n\n[v2 - Returning to the Adamas]\n\nJoin me my friends, join with me.\nAs we fly ever on, for new discoveries\nAway from our homes, on land or in space\nLet us sing of that system we hope to aid\n\nFar out into the void of space,\nLies the trinary that we once knew\nFor all it may aid us, it is still far\nAnd the journey is long but we do it for home\n\nJoin me my friends, join with me\nAs we fly ever on, to new mysteries,\nBack to the Adamas, back to our hope,\nLet us sing of new sights and treasures beyond\n\nJoin me my friends, join with me, back there\n\n[v3 - Back in the Adamas]\n\nJoin me my friends, join with me.\nAs we fly ever on, for new discoveries\nFinding a new home, out among friends\nLet us sing of that system we hope to aid\n\nFrom wild blue oceans, red sands or stars\nWe all share a bond that can't be torn apart\nSing for our fellows both new and old\nFor space takes us all no matter how bold\n\nJoin me my friends, join with me\nAs we fly ever on, to new mysteries,\nBack in the Adamas, back to our hope,\nLet us sing with our new friends and for discoveries\n\nJoin me my friends, join with me, out there",
+    "source_book": "UCN Songbook",
+    "source_page": 23
+  },
+  {
+    "id": 22,
+    "title": "Leave Earth, Johnny",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Kane",
+    "tune": "Leave Her, Johnny, Leave Her; trad",
+    "lyrics": "I thought I heard the Admiral say:\n\"Leave Earth, Johnny, leave Earth.\"\nTomorrow we will find our way,\nand it's time for us to leave Earth.\n\nChorus:\nLeave Earth, Johnny, leave Earth!\nOh, leave Earth, Johnny, leave Earth!\nFor the skies are dark and the grass won't grow\nAnd it's time for us to leave Earth.\n\nOh, the warnings came but we stayed too long.\nLeave Earth, Johnny, leave Earth!\nThe scientists said it all along.\nAnd it's time for us to leave Earth.\n\nRepeat chorus\n\nLook at the size of the Exodus fleet!\nLeave Earth, Johnny, leave Earth!\nFive factions sailing in retreat\nAnd it's time for us to leave Earth.\n\nRepeat chorus\n\nWe sail into the void to start anew.\nLeave Earth, Johnny, leave Earth!\nThe Adamas Belt is what we pursue.\nAnd it's time for us to leave Earth.\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 24
+  },
+  {
+    "id": 23,
+    "title": "My Dear [Ship Name]",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Lefe Grds",
+    "tune": "The Song of the Western Men; Louisa T Clare",
+    "lyrics": "A good ship full of trusty hands\nWell train-ed, brave and true\nThe President shall understand\nWhat our cadets can do\nNo matter when or where we go\nAcross the inky black\nThrough peril bleak and sneak attack\nWe'll bring our [Ship Name] back\n\nChorus:\nAnd shall the [Ship Name] live\nOr shall the [Ship Name] die\nOfficers of the UCN\nShall know the reason why\n\nA pirate Captain brave and bold\nOur shuttle eye'd with glee\nIn tractor beam that bird was hold\nWe'll set our shipmates free\n\nWe'll cross the belt, grid to grid\nAdamas is no stay\nWe'll \"go beyond\" in unit-ay\nOur enemies to slay\n\nRepeat chorus\n\nAnd when we come to their foul lair\nAll under great attack\nNo quarter will our captain give\nUntil our shipmate's back\n\nNow [Ship Name] is a tough old bird\nBut the damage is quite great\nBlown OCPs and safety smoke\nSignal a dire fate\n\nRepeat chorus\n\n[Alternative blame chorus:]\nAnd shall the [Ship Name] live\nOr shall the [Ship Name] die\nThese green cadets - dead OCPs\nShall be the reason why",
+    "source_book": "UCN Songbook",
+    "source_page": 25
+  },
+  {
+    "id": 24,
+    "title": "One Hundred Feet",
+    "category": "Bar/Drinking Songs",
+    "words": "Cadet Simon Clark",
+    "tune": "One Hundred Feet; Robbie Sattin",
+    "lyrics": "All the years of waiting for the ships to come back home\nHear the logs they would record and see how colonies have grown\nIn the night I think about the lives that could have been\nCut short at the finish line no settlers to be seen\n\nChorus:\nOne hundred feet from Doors\nwe will hear their words no more\nThough I'd swear I heard calling on the comms\nOne hundred feet from Doors\nIn the vacuum evermore\nforever there, one hundred feet from doors\n\nMan the shuttle I heard them cry, the ship is going down\nSuch a fight has broken her, she's bound to spill the air\nSurging out the docking bay but many can't escape\nFighting for their lives again so close to base they wait\n\nRepeat chorus\n\nMany swim through freezing space for all that they could stand\nO2 tanks and patching kits drag and slow them down\nStruggled on for precious life until their breath ran out\nTheir souls to leave their bodies their floating in the night\n\nRepeat chorus\n\nDodging beams and missile flares, loading OCPs\nThe fight it couldn't take them but space holds nothing dear\nOne hundred years or more it's been the sadness lingers on\nSpacers keep the memories of the ones who've gone beyond\n\nOne hundred feet from Doors\nwe will hear their words no more\nThough I'd swear I heard calling on the comms\nOne hundred feet from Doors\nIn the vacuum evermore all in the ethers roar\none hundred feet from doors\nIn the vacuum evermore\none hundred feet from doors",
+    "source_book": "UCN Songbook",
+    "source_page": 26
+  },
+  {
+    "id": 25,
+    "title": "Out through the Belt and Far Away",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. \"Toast\" Ray; additional verses Lt. Cmdr. \"Toast\" Ray & Lt. Cmdr. Jim",
+    "tune": "Over the Hills and Far Away; trad",
+    "lyrics": "Here's forty credits on the drum,\nFor those who'll volunteer to come,\nTo 'list and fight pirates today,\nOver the belt and far away.\n\nChorus:\nO'er teleport and through Warspite\nWith our crews all ready; all trained right\nThe fleet commands and we obey\nOut through the belt and far away\n\nIt's gravium we seek of course\nIt is a limited resource\nIts import we cannot gainsay\nOut in the belt and far away\n\nRepeat chorus\n\nWhen FO calls me, I must go,\nTo fly and face another foe,\nAdamas have seen our ships of war,\nNow friends and trading shall endure\n\nRepeat chorus\n\nTo Red alert, we fight as one\nOur beams a-blazing like a sun\nWarping out to come what may\nOut in the belt and far away\n\nRepeat chorus\n\nWhen JUDITH calls me, I must go\nThe warp core burned out long ago\n'til we're picked up I guess we'll stay\nOut in the belt and far away\n\nRepeat chorus\n\nIf destroyed and to return no more\nAs many comrades did before,\nIn the mess celebrations should play,\nOut through the belt and far away.\n\nRepeat chorus\n\nTo go beyond is our refrain\nEarth, Luna, Mars and more again\nThe fleet commands and we obey\nOut through the belt and far away\n\nRepeat chorus\n\n[Alternative Verses]\n\nThe Journey:\nOur target relative will be\nTo Gliese six sixty seven C\nTo Warspite it will us relay\nOut to the belt and far away\n\nThe Grumbler:\nThere's no credits, no free rum\nFor those that volunteer to come\nCommissioned in the fleet today\nOver the belt and far away\n\nCraft Corner:\nWhen not deployed some like to chill\nWith mastery of crafting skill\nTo knit, to paint, perhaps crochet?\nOver the belt and far away\n\nThe Teleporter:\nThe teleporter's safe, it's true\nBut now my hair's a fetching blue\nA minor glitch that we'll downplay\nOver the belt and far away\n\nThe Accessoriser:\nI need a pouch for all my kit\nMy darkened glasses it must fit\nI'll wear what I found on eBay\nOver the belt and far away\n\nThe Zuckerberg:\nA stream of lyrics I must pen\nThere are some clunkers now and then\nI have a preference for wordplay\nOver the belt and far away\n\nThe \"I've got one line and I can't make the rest work\":\nAnd so we're called to Go Beyond\nWhich rhymes with \"Francois Mitterrand\"\nWith rhymes like this we must dismay\nOver the belt and far away",
+    "source_book": "UCN Songbook",
+    "source_page": 27
+  },
+  {
+    "id": 26,
+    "title": "Raise a Glass",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. \"Toast\" Ray",
+    "tune": "Here's a Health to the Company; trad",
+    "lyrics": "Kind friends and dear shipmates, come join me in rhyme\nCome lift up your voices in chorus with mine\nCome lift up your voices all grief to refrain\nFor we may or might never all meet here again.\n\nChorus:\nHere's a health to the Warspite and one to my ship\nLet us drink all the cocktails and prepare for our trip\nLet us drink and be merry all grief to refrain\nFor we may or might never all meet here again.\n\nHere's a health to the Captain that I love so well\nFor their orders and steadiness, sure none can excel\nThere's a smile on their countenance as they guide us through space\nThere's no crew in this wide world as happy as this\n\nRepeat chorus\n\nOur crew stands at ready, they're raring to go\nWhere the mission does take us, we nev'r will know\nThrough Grey Hats and Pirates let diplomacy reign\nBut our nukes stand at ready, ne'er surprised again.\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 29
+  },
+  {
+    "id": 27,
+    "title": "Safety Briefing Song",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "I Am the Very Model of a Modern Major-General; Arthur Sullivan",
+    "lyrics": "This is the very model of a modern safety briefing song\nPlease give it your attention, even if it seems to be quite long\nIn really major situations staying here might not be fine\nJust like on Earth to get out you just follow the white and green signs\n\nNow space is full of sights and noises that may leave you in a state\nBut here is how you'll know that now you really must evacuate\nA siren with two tones that is much louder than the rest will be\nAnd a human voice is saying that it is a real emergency\n\n[Chorus singers:]\nA human voice is saying that it is a real emergency\nA human voice is saying that it is a real emergency\nA human voice is saying that it is a real emergen-mergency\n\nWe want you all to have a very pleasant trip both day and night\nPlease let us know if you have sensitivity to flashing lights\nAnd thank you for continuing to listen as I still go on\nDelivering the info in this modern safety briefing song\n\n[Chorus singers:]\nAnd thank you for continuing to listen as they still go on\nDelivering the info in this modern safety briefing song\n\nIf you need some assistance then just find someone whose patch is white\nThey're full time posted to a ship like for example the Warspite\nIf on deployment you need help and none of them can be found there\nJust stand still where you are and put both of your hands up in the air\n\nWe ask you most politely that you do not record video\nWe do not want to give away the cool things that are in the show\nTake photos with consent of those in them, that's both players and crew\nAnd don't touch other people if they don't say that it's fine to do\n\n[Chorus singers:]\nAnd don't touch other people if they don't say that it's fine to do\nAnd don't touch other people if they don't say that it's fine to do\nAnd don't touch other people if they don't say that it's fine to fine to do\n\nAnd that concludes the information that we have to give to thee\nPlease let us know if we can help you with accessibility\nI'm sure you'll be delighted that this ditty I will not prolong\nAnd thank you for your patience with this modern safety briefing song\n\n[Chorus singers:]\nI'm sure you'll be delighted that this ditty we will not prolong\nWe thank you for your patience with this modern safety briefing song",
+    "source_book": "UCN Songbook",
+    "source_page": 30
+  },
+  {
+    "id": 28,
+    "title": "Shuttlecraft",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Lefe Grds",
+    "tune": "The Song of the Western Men; Louisa T Clare",
+    "lyrics": "The smallest ship that's in our fleet, It is the shuttle craft\nIt's crewed by four with room for more, In an emergency\nWe undock from our mothership, And make our way alone\nAnd if we're really lucky, They'll not know where we've gone\n\nChorus:\nAnd shall the shuttle live\nOr shall the shuttle die\nCambell's engineering corps\nShall know the reason why\n\nA good hull full of trusty hands, Well train-ed, brave and true\nAll here to show the captain here, What our cadets can do\nNo matter when or where we go, Across the inky black\nThrough peril bleak and sneak attack, We'll bring our shuttle back\n\nRepeat chorus\n\nWell the pilot they do fly the bird, it's almost point and click\nThe engineer moves slides around, it's enough to make you sick\nThe generalist is over-worked, bereft of enough hands\nThe XO will just stand right there, whilst barking out commands\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 31
+  },
+  {
+    "id": 29,
+    "title": "The Smallest Ship",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Lefe Grds",
+    "tune": "The Song of the Western Men; Louisa T Clare",
+    "lyrics": "A good hull full of trusty hands\nWell train-ed, brave and true\nAll here to show the mothership\nWhat our cadets can do\nNo matter when or where we go\nAcross the inky black\nThrough peril bleak and sneak attack\nWe'll bring our shuttle back\n\nChorus:\nAnd shall the shuttle live\nOr shall the shuttle die\nThe captain of our mothership\nShall know the reason why\n\nA pirate Captain brave and bold\nOur shuttle eye'd with glee\nIn tractor beam our bird was hold\nWe could not quite break free\nThe mothership in hot pursuit\n\"Adamas is no stay\"\nWe'll \"go beyond\" in unity\nYour enemies to slay\n\nRepeat chorus\n\nAnd when they came to their foul lair\nAnd came under attack\nNo quarter will our captain give\nUntil our shuttle's back\nNow shuttle is a tough old bird\nBut the damage is quite great\nBlown OCPs and safety smoke\nSignal a dire fate\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 32
+  },
+  {
+    "id": 30,
+    "title": "Sleeping in the Infinite",
+    "category": "Bar/Drinking Songs",
+    "words": "The Friendly Neighbourhood Robot",
+    "tune": "Sleeping in the Cold Below; Keith Bower, Alan Doyle, Digital Extremes",
+    "lyrics": "So it's into the belt\nWith the hand that we are dealt\nFor all our kin, we fight\nWe'll be fighting for our lives\nPushing back human demise\nLest we're sleeping in the infinite\n\nChorus:\nMankind! Unite, unite\nAgainst a foe of greater might\nNo we won't back down\nfrom this fight, we will not be\nSleeping in the infinite, tonight\nSleeping in the infinite\n\nThe Havock's quick\nAnd the Takanami's thick\nAnd all our crews, they bite\nNo surrender shall be made\nFor there's hell to pay\nWon't be sleeping in the infinite\n\nRepeat chorus\n\nMay the Xeno scum\nNe'er set eyes on our sun\nThey'll never feel her light\nWe tried to offer peace to them\nBut they would rather be condemned\nTo sleeping in the infinite\n\nRepeat chorus\n\nWe UCN\nare fighting them\nfor more than just our lives\nIn the Adamas Belt\nWe have never felt\nlike we'd be sleeping in the infinite, tonight\nsleeping in the infinite\n\nMankind! Unite, unite\nAgainst a foe of greater might\nNo we won't back down\nfrom this fight, we will not be\nSleeping in the infinite, tonight\nSleeping in the infinite, tonight\nSleeping in the infinite\n\nOne day we'll fly\nInto barren sky\nFor there's much we must set right\nSo warm up your guns\nFor when the time comes\nTo send them sleeping in the infinite",
+    "source_book": "UCN Songbook",
+    "source_page": 33
+  },
+  {
+    "id": 31,
+    "title": "Terran Sailors",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Spanish Ladies; trad",
+    "lyrics": "Farewell and adieu to you fair Terran beauties\nFarewell and adieu to you beauties of Earth\nFor we've received orders to deploy to Adamas\nBut we hope very soon we shall see you again\n\nChorus:\nWe'll rant and we'll roar, like true Terran sailors\nWe'll rant and we'll roar, wherever we'll be\nSome day we'll return to Sol's warm gentle sunlight\nBut for now we set course for six six seven C\n\nWe hove our ship to, to check diagnostics\nOur engines complaining, and threat'ning to break\nDeploying our SPANRs, and judicious percussions\nUntil Captain ordered us - best speed to make\n\nRepeat chorus\n\nOur course we did set, to skirt round the barrens\nThen Xanadu station, alone in the night\nWe sailed on by miners, by traders and pirates\nUntil then at last we met up with Warspite\n\nRepeat chorus\n\nThen the signal was made for the Task Group to anchor\nIn nebula hidden that night for to lie\nSecure all the warp cores, OCPs and crystals\nAnd prep your reactors, for tomorrow we fly!\n\nRepeat chorus\n\nNow let every sailor toss off a full bumper\nAnd let every sailor drink up their full tot\nWe'll drink and be merry and drown melancholy\nWith a health to this jovial and true-hearted lot",
+    "source_book": "UCN Songbook",
+    "source_page": 35
+  },
+  {
+    "id": 32,
+    "title": "The Bonnie Stars o' New Lomond",
+    "category": "Bar/Drinking Songs",
+    "words": "Sub Lt. Tetra",
+    "tune": "The Bonnie Banks o' Loch Lomond; trad",
+    "lyrics": "By yon starlit docks and yon bright orbital rings,\nWhere the cold suns shine o'er New Lomond,\nWhere me and my true crew were ever wont tae roam,\nOn the bonnie, bonnie stars o' New Lomond.\n\nChorus:\nOh ye'll take the warp lane, and I'll take the impulse lane,\nAnd I'll be in Sol afore ye,\nBut me and my true crew may never meet again,\nOn the bonnie, bonnie stars o' New Lomond.\n\n'Twas there that we parted in yon silent void,\nBeside Havock's shuttle gliding,\nWhere the nebulae burned in soft violet hue,\nAnd the pale moons watched us hiding.\n\nRepeat chorus\n\nThe comm beacons fade and the great warp core hums,\nAnd the starfields lie cold and sleeping,\nBut the weary heart kens nae second dawn again,\nThough the lost may cease from their grieving.\n\nRepeat chorus\n\nFor the void calls on through the endless black seas,\nAnd the fleet still sails through the silence,\nWith the old flags worn and the hull plating scarred,\nStill we answer the stars with defiance.\n\nRepeat chorus\n\nOh ye'll take the warp lane, and I'll take the impulse lane,\nAnd I'll be in Sol afore ye,\nBut me and my true crew may never meet again,\nOn the bonnie, bonnie stars o' New Lomond.",
+    "source_book": "UCN Songbook",
+    "source_page": 35
+  },
+  {
+    "id": 33,
+    "title": "The Comms Man and the Grey Hat",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. \"Toast\" Ray & Cadet Simon Clark",
+    "tune": "William Taylor; trad",
+    "lyrics": "The comms man and his grey hat lover\nFull of mirth and loyalty\nThey were going to the church to be married\nShe was pressed to the wine dark sea\n\nHe dressed in sailor's clothing\nBoarded off the Warspite\nFor to find the life they'd stolen\nAnd the woman he did adore\n\nChorus:\nDally-dilly-dum, dilly-dum-dum-dum-dum\nDally-dilly-dum, dilly-dum-dum-day\nDally-dilly-dum, dilly-dum-dum-dum-dum\nDally-dilly-dum, dilly-dum-dum-day\n\nSaid the captain to this cadet\n\"What misfortune brought you here?\"\n\"I'm in search of my true lover\nWhom they pressed on the other year\"\n\n\"If she is your true lover\nShe has proved to you untrue\nShe is married to another\nLeft you here alone to rue\"\n\nRepeat chorus\n\nHe got up the very next morning\nEarly as the break of day\nThere he spied his Grey Hat lover\nRacing along with her new love's drone\n\nHe threw out a brace of missiles\nThat he had at his command\nThere he shot his Grey Hat lover\nWith her love at her right hand\n\nWhen the captain he found him and the deed that he had done\nHe made him the cocktail waiter for the drinks of a hundred men\n\nRepeat chorus\n\nThe comms man and his Grey Hat lover\nFull of mirth and loyalty\nShe is buried, cold and lonesome\nHe still sails the wine dark sea\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 36
+  },
+  {
+    "id": 34,
+    "title": "The Election that Doesn't End",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Kane",
+    "tune": "The Song That Doesn't End; Shari Lewis/Norman Martin",
+    "lyrics": "This is the election that doesn't end\nYes it goes on and on citizen\nSome greyhats hacked it to elect a Byte\nAnd now we'll keep on voting in it just because\n\n[Repeat indefinitely]",
+    "source_book": "UCN Songbook",
+    "source_page": 38
+  },
+  {
+    "id": 35,
+    "title": "The Mad Pirate King",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Ward",
+    "tune": "Original; Lt. Cmdr Ward",
+    "lyrics": "He's sweaty\nHe's smelly\nHe shows off his belly\nWhen challenged\nHe puts up his dukes\nFor he loves a good brawl\nWhen his back's 'gainst the wall\nJust be careful if you give him nukes!\n\nIf you're in for a pound\nHe'll be in for his Penny\nAnd he won't give up ground\nLike the all times when he\nDefended 5-5\nKept Kalgoorlie alive!\nAnd he blew up those vipers\nIn mass Xenocide!\n\nChuck Richards don't know what he's thinking\nEspecially when he's been out drinking!\nWith a roll of the die\nMight give Bell a black eye,\nOr become a great asset to UCNI\n\nNow, he may not be sane\nAnd our man fears no pain\nBut love him or loathe him, you all know his name\n\nSo raise up your glasses and join as I sing!\nFor Gobba! The mad pirate king!\n\nHe once was despised\nNow we toast him with pride\nAnd we thank the gods, Gobba is now on our side!",
+    "source_book": "UCN Songbook",
+    "source_page": 38
+  },
+  {
+    "id": 36,
+    "title": "The Milk Run",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Lefe Grds",
+    "tune": "Wellerman; trad",
+    "lyrics": "As we boarded the ship Cap'n\nbeamed with glee\nDiplomatic mission - very easy\nQuick cargo run for a passenger\n\"So mind your ruddy manners\"\n\nComms hail the Warspite right\nWe're off on a milk run - back tonight\nComms hail the mess hall now\nBeat the bell for last orders\n\nWe set off galactic nor nor west\nFor the mining station \"Heaven Blest\"\nOur cargo was the Ambassador\nFor a meeting back on Warspite\n\nWe're on the milk run now\nCruising at warp - engines humming low\nWe're on the milk run now\nTo fetch our precious cargo\n\nWe update Warspite casually\n\"Transfers going normally\"\nBut radar contacts turn to red\nAnd the comms turn deathly silent\n\nCan't hail the Warspite now\nOur comms are jammed - in a pickle now\nCan't hail the Warspite now\nAnd the Cap't'n unprepared\n\nWell intelligence was in the dark\nThreat assessment wide o' the mark\nThe Cult of Torment ambushed us\nAs we loaded precious cargo\n\nComms hail the Warspite now\nFor OCPs, drones and bombs\nComms hail the Warspite now\nSo much for ruddy milk runs\n\nWe took some hits - shields went off-line\nCaptain to helm \"can you buy us time\"\n\"Let's tune our weps to their frequency\"\n\"We can take 'em if we try\"\n\nBrave without the Warspite now\nOutclassed outgunned outnumbered and how\nBrave without the Warspite now\nBut the captain gives the orders\n\nThey hit us hard with all they got\nOverclocked our beams till they ran hot\nWe dropped our mines shot all our torps\n'Till the magazine ran dry\n\nComms hail the Warspite now\nFor OCPs, drone and bombs\nComms hail the Warspite now\nWe'll need that resupply\n\nThe captain said \"scan over there\"\nAs luck would have it a nebula\n\"We can use that whilst we make repair\"\n\"Till the Warspite saves our bacon\"\n\nPray now the Warspite comes,\nWith OCPs and lots of guns\nPray now the Warspite comes\nTo save our worthless Captain\n\nWe entered the nebula easily\nThen systems blew up sequentially\nLost OCPs and our engineer\n\"Comms boost that ruddy signal\"\n\nWe need the Warspite now\nWe're out of our depth - nowhere to go\nWe need the Warspite now\nTo save our precious cargo\n\nWe jury rigged a power fix\nBoosted reactor with some tricks\nOverclocked our comms to the max\nTo get out our desperate signal\n\nComms hail the Warspite right\nWithout their help - won't last the night\nComms hail the Warspite right\nTo save our precious cargo\n\nThat nebula pulsed far and wide\nWe're taking more damage - it's no place to hide\nThe crew's exhausted our last resource\nIt's time to face the piper\n\nComms hail the Warspite now\nFor OCPs, drone and bombs\nComms hail the Warspite now\nWhere is that resupply\n\nAs we nosed out what did we see\nCult of Torment, cruisers three\nThen long range scans picked up a ship\nAs the torps came thund'ring for us\n\nSee now the Warspite comes\nWith OCPs and lots of guns\nOh how the Warspite comes\nWe might yet make the morning\n\nThe fight was grim till they got in range\nHull's in the red - then they engage\nThe cult of torment quits in rage\nNo match for dear old Warspite\n\nWe're on the Warspite now\nWith OCPs and drink and chow\nSafe on the Warspite now\nAnd that Cap't'n's been demoted",
+    "source_book": "UCN Songbook",
+    "source_page": 39
+  },
+  {
+    "id": 37,
+    "title": "The Quartermaster's Song",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Wellerman; trad",
+    "lyrics": "There's one best ship in the whole navy\nAnd the name of the ship is the Takanami\nThere's no better place in the void to be\nSo beyond we shall go\n\nChorus:\nSoon then the QM will come\nTo bring exciting new kinds of rum\nThen when the debrief is done\nWe'll teleport back home\n\nNow some officers say the Havock's good too\nAnd aside from at nav she's a pleasure to crew\nBut a door on the bridge that goes straight to the loo?\nNice try frigate but no!\n\nRepeat chorus\n\nWe've oft met with foes wearing hats of grey\nOur orders to make sure they're kept at bay\nIf they look for a fight there'll be hell to pay\nFrom our beams and missiles and drones\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 42
+  },
+  {
+    "id": 38,
+    "title": "The Young Ensign",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "The Wild Rover; trad",
+    "lyrics": "I've been a young ensign for many a run\nAnd I've propped up the bar drinking whisky and rum\nBut now I'm promoted, new stripes to be worn\nAnd I never will be a young ensign no more\n\nChorus:\nAnd it's no, nay, never\nNo never no more\nWill I be a young ensign\nNo never, no more\n\nWith fresh new adventures those stripes they grew wide\nFrom sparring with pirates and others beside\nThe pay is no better, despite what you'd think\nAt least from the captain you get a free drink\n\nRepeat chorus\n\nIn time I'm approved by the Admiralty board\nKind words from the captain the greatest reward\nBut lieutenant commanders we often do fret\nFor we have to look after the Oldest Cadet!\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 42
+  },
+  {
+    "id": 39,
+    "title": "Warspite Mess",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Lefe Grds",
+    "tune": "Swansea Town; trad",
+    "lyrics": "Oh, farewell to you dear Doctor, ten thousand times adieu;\nWe're off to board the Havock now, as a part of its fine crew;\nOnce more to part from you, fine ship, it's the mess that I adore.\nBut still I live in hopes to see the Warspite Mess once more.\n\nChorus:\nThe Warspite Mess once more, fine ship, with the crew that I adore,\nBut still I live in hopes to see old Warspite's mess once more.\n\nOh! It's now that we are out in space, and docks are far behind,\nComm section will transmit to you of the secrets of my mind,\nThe secrets of my mind, fine crew, of the ship that I adore,\nBut still I live in hopes to see the Warspite Mess once more.\n\nRepeat chorus\n\nOh now this pulsar's blinding, with asteroids coming on,\nThe radar's dead and impulse too, now our shields all are gone;\nThe good old Havock is tossed back, the great hull is all tore,\nBut still I live in hopes to see the Warspite Mess once more.\n\nRepeat chorus\n\nOh, it's now that time warp's over and we are safe once more;\nWe'll drink strong drinks and brandies too, to the ships that we adore.\nTo the ships that we adore, fine crews, we'll make this mess hall roar,\nAnd when our credits are all gone we'll go to space for more.\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 43
+  },
+  {
+    "id": 40,
+    "title": "Warspite Task Group",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "To Be A Pilgrim (AKA He Who Would Valiant Be); trad",
+    "lyrics": "Those who would Valiant crew\nFacing disasters\nIt would be nice if you\nCould get here faster\nWith engines com-pli-ent\nOnce we have lent you Dent\nNow meet, and compliment\nThe Warspite Task Group\n\nMistake not tales we tell\nFor boastful stories\nWhen you read the intel\nYou'll see there more is\nNo foes shall stay our might\nThough UVPs we fight\nBehold the awesome sight\nOf Warspite Task Group\n\nOur task to Go Beyond\nBoldly we swear it\nFrom all in belt and Sol\nStrength we inherit\nOur duty none gainsay\nFrom bridge to docking bay\nWe'll crew, both night and day\nThe Warspite Task Group",
+    "source_book": "UCN Songbook",
+    "source_page": 44
+  },
+  {
+    "id": 41,
+    "title": "What Shall We Do on the Takanami?",
+    "category": "Bar/Drinking Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "What Shall We Do With The Drunken Sailor; trad",
+    "lyrics": "What shall we do on the Takanami?\nWhat shall we do on the Takanami?\nWhat shall we do on the Takanami?\nBest ship in the Task Group\n\nChorus:\nWey hey and here she warps in\nWey hey and here she warps in\nWey hey and here she warps in\nBest ship in the Task Group\n\nHave a proper seat for the navigator\nHave a proper seat for the navigator\nHave a proper seat for the navigator\nBest ship in the Task Group\n\nRepeat chorus\n\nTreat 'em in the med bay 'coz we've got one\nTreat 'em in the med bay 'coz we've got one\nTreat 'em in the med bay 'coz we've got one\nBest ship in the Task Group\n\nRepeat chorus\n\nMove around a bridge with no stupid railings\nMove around a bridge with no stupid railings\nMove around a bridge with no stupid railings\nBest ship in the Task Group\n\nRepeat chorus\n\nUse the cargo bay for performing Spamlet\nUse the cargo bay for performing Spamlet\nUse the cargo bay for performing Spamlet\nBest ship in the Task Group\n\nRepeat chorus\n\nAtomise our foes and defend our allies\nAtomise our foes and defend our allies\nAtomise our foes and defend our allies\n'Coz we're all one big Task Group",
+    "source_book": "UCN Songbook",
+    "source_page": 45
+  },
+  {
+    "id": 42,
+    "title": "Do You Want to be a Gobey?",
+    "category": "Crew Ballads",
+    "words": "Lt. Cmdr. Ward",
+    "tune": "Do You Want to Build a Snowman; Kristen Anderson-Lopez, Robert Lopez",
+    "lyrics": "Do you wanna be a Gobey?\nAnd fly the Tak across the Stars?\nI think new crew are overdue\nNow there's a spot for you\nWhether you're from Luna, Earth or Mars\n(Hang in there, Oz)\n\nIt gets a little lonely\nPosting in crew-finder\nAnd watching the posts scroll by\n\nDo you wanna be a Gobey?\n(You get a patch if you're a Gobey)\nOkay bye",
+    "source_book": "UCN Songbook",
+    "source_page": 45
+  },
+  {
+    "id": 43,
+    "title": "Raising Havock",
+    "category": "Crew Ballads",
+    "words": "Lt. Cmdr. Kane",
+    "tune": "The Powerpuff Girls end theme; Bis",
+    "lyrics": "RAISING HAVOCK!\nRAISING HAVOCK!\n\nKane, commander and the leader\nRaphael, they are the joy and the laughter\nDeverell, 'N' he's the toughest fighter\nRaising Havock save the day\n\nFighting pirates, trying to save the Belt\nHere they come just in time,\nRaising Havock\n\nFighting pirates, trying to save the Belt\nHere they come just in time,\nRaising Havock\n\nOh no, it's the scary Grey Hats\nWatch out, don't hit that asteroid\nGet them, it's the Cult of Torment\nChasing evil, it won't stop.\n\nAnd then they'll be\nFighting pirates, trying to save the Belt\nHere they come just in time,\nRaising Havock\n\nFighting pirates, trying to save the Belt\nHere they come just in time,\nRaising Havock\n\nRAISING HAVOCK!",
+    "source_book": "UCN Songbook",
+    "source_page": 46
+  },
+  {
+    "id": 44,
+    "title": "Rhydding's Riders",
+    "category": "Crew Ballads",
+    "words": "Lt. Cmdr. P. \"Tree\" O'Callaghan",
+    "tune": "Apparently",
+    "lyrics": "rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding\nrhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding\nrhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding rhydding\n\n[repeat until very awkward and figure out how to stop]",
+    "source_book": "UCN Songbook",
+    "source_page": 47
+  },
+  {
+    "id": 45,
+    "title": "Captain Jones",
+    "category": "Accompanied Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Doctor Jones; Aqua",
+    "lyrics": "[Two-part song. Lines for singer two in italics, instructions in brackets.]\n\nSometimes the feelin' is right\nYou fall in love for a good time\nHeartbeat and kisses so sweet\nOuter space love in the starlight\n\nAh-yippie-yi-ooh, ah-yippie-yi-yeah\nAh-yippie-yi-ooh-ah\n\nNow that your leave is done\nYou have to ship back out\nUn-til I see you again\nI'll have to do without\n\n[Chorus 1:]\nBaby, I am missin' you\nI want you by my side\nAnd I hope you'll miss me too\nCome back and stay\nI'll think about you every day\nI really want you too\nI've got the best coat in the fleet\nOn you it looks neat\n\n[Chorus 2:]\nCaptain Jones, Jones, hailing Captain Jones\nCaptain Jones, Captain Jones warp in now\nWarp in now\nCaptain Jones, Jones, hailing Captain Jones\nCaptain Jones, Captain Jones warp in now\nWarp in now\n\nAh-yippie-yi-ooh, ah-yippie-yi-yeah\nAh-yippie-yi-ooh-ah\n\nAll I think of is you\nAnd all of the things we have\nCaptain, what can I do?\nWhy am I so damn good at Nav?\n\n[Repeat Chorus 1]\n\n[Repeat Chorus 2]\n\nCome, here, bestie\nCome, here, bestie\nCome, here, bestie\nCome, here, bestie\n\nCaptain Jones, Jones - Warp in now\nCaptain Jones, Jones - Warp in now\nCaptain Jones, Jones - Warp in now\nCaptain Jones, Jones, warp in now\n\n[Repeat Chorus 2]",
+    "source_book": "UCN Songbook",
+    "source_page": 47
+  },
+  {
+    "id": 46,
+    "title": "Flying on Havock",
+    "category": "Accompanied Songs",
+    "words": "Cadet Simon Clark",
+    "tune": "Walking in Memphis; Marc Cohn",
+    "lyrics": "Put on my blue jacket\nAnd got in the teleporter\nTouched down in the mess of the Warspite\nIn the middle of the Adamas Belt\nCaptain Taylor won't you look down over me?\nYeah, I got cadet rank badges\nThat are as white as white can be\n\nChorus:\nThen I was flying on Havock\nFlying on the comfiest ship in the fleet\nFlying on Havock\nBut why is the Captain looking at me?\n\nSaw the ghost of Elvis\nIn the briefing room\nFollowed him up to the doors of Takanami\nThen I watched him walk right through\nNow security they did not see him\nThey just hovered 'round the med bay.\nBut there's a pretty little Grey Hat\nWaiting for the Cadet\nOut in the Adamas Belt\n\nRepeat chorus\n\nThey've got cocktails on the table\nThey've got responsibility in the air\nAnd Commander Rhydding be glad to see you\nWhen he needs someone to demote\nBut, boy, he's got a victim in the Cadet\n\nNow Freddie runs the comms\nEvery Friday at the Warspite\nAnd they brought me down to see her\nAnd they asked me if I would\nPlay a little attention\nAnd I avoided with all my might\nShe said\n\"Tell me do you have your Generalist patch as you did engineering tonight\"\n\nRepeat chorus\n\nPut on my blue jacket\nAnd got in the teleporter\nTouched down in the mess of the Warspite\nIn the middle of the Adamas Belt\nTouched down in the mess of the Warspite\nIn the middle of the Adamas Belt",
+    "source_book": "UCN Songbook",
+    "source_page": 49
+  },
+  {
+    "id": 47,
+    "title": "It's Takanami",
+    "category": "Accompanied Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "We Like to Party (AKA The Vengabus is Coming); The Vengaboys",
+    "lyrics": "It's Takanami\nUCS Takanami\nIt's Takanami\nUCS Takanami\n\nI've got something to tell you\nI've got news for you\n'Cause we've just launched from the Warspite\nGet ready 'cause we're coming through (coming through)\n\nHey now, hey now, hear what I say now\nUCN is just around the corner\nHey now, hey now, hear what I say now\nWe'll be there for you\n\nChorus:\nThe Takanami's coming\nAnd everybody's jumping\nUndoubtedly the best ship\nSo get aboard for this trip\nA fresh new crew's just rocked up\nThe missile tubes are stocked up\nSo ne'er-do-wells should take care\nTo locate themselves elsewhere\n\nIt's Takanami\nUCS Takanami\n\nHey now, hey now, hear what I say now\nUCN is just around the corner\nHey now, hey now, hear what I say now\nWe'll be there for you\n\nRepeat chorus\n\nIt's Takanami\nUCS Takanami\n\nThe Takanami's coming",
+    "source_book": "UCN Songbook",
+    "source_page": 50
+  },
+  {
+    "id": 48,
+    "title": "Smoke from the Warp Core",
+    "category": "Accompanied Songs",
+    "words": "Lt. Cmdr. Jim - Ship's Councillor",
+    "tune": "Smoke on the Water; Deep Purple",
+    "lyrics": "We came out to Adamas\nTo the Task Group from the Warspite\nTo help out the Terra Novans\nWe knew we'd do them right\nBut some nasty group of pirates\nHit us when our shields were out\nWith bad damage to the warp drive\nWe pulled that damned knife switch down\n\nChorus:\nSmoke from the warp core\nSparks began to fly\nSmoke from the warp core\nWe burned out the impulse drive\nIt died with an awful sound\n\nDamage Control was running all about\nSwapping OCPs out\nWhen it all was over\nThere were no enemies to face\nOur missile stocks were running dry\nAnd we were stuck there dead in space\n\nRepeat chorus\n\nWe ended up in a nebula\nJust an empty cloud of dust\nVacuum of space just outside\nSurviving how we must\nWith backup lights and a few bunk beds\nWe can just wait and sweat\nNo matter how we get out of this\nI know, I know we'll never forget\n\nRepeat chorus",
+    "source_book": "UCN Songbook",
+    "source_page": 52
+  },
+  {
+    "id": 49,
+    "title": "Warspite Task Group is Go!",
+    "category": "Accompanied Songs",
+    "words": "Lt. Raven",
+    "tune": "Thunderbirds Are Go; Busted",
+    "lyrics": "The 80s come around and\nThere's more heroes to be found\nThere's something major going down in the Adamas\nWeapons all around\nKeeping the Adamas safe and sound\nIf someone evil's coming round they should be frightened (frightened)\n\n'Cause now the Navy's back in town\nAnd they'll remove those frowns (frowns)\nDon't be mad please, stop the aiming\nAnd be glad that they'll be helping\nCrew we have are ever changing\nYou know the core's about to blow\nWhen the Warspite group is go\n\nKids are learning fast\nThey know the task group kick some ass\nBe sure that there's no coming last\nIf you're on their side (their side)\nIt always looks so cool\nWhen spaceships chase off all those ghouls\nYou know that you'd just be a fool\nTo be a bad guy (bad guy)\n\n'Cause now the Navy's back in town\nAnd they'll remove those frowns (frowns)\nDon't be mad please, stop the aiming\nAnd be glad that they'll be helping\nCrew we have are ever changing\nYou know the core's about to blow\nWhen the Warspite group is go\n\nWarspite Task Group's go, go, go, go, go, go, go, go\n\nDon't be mad please, stop the aiming\nAnd be glad that they'll be helping\nCrew we have are ever changing\nYou know the core's about to blow\nWhen the Warspite group is go\n\n(Havock is a go)\n(Takanami's a go)\n(Falchion is a go)\nWarspite is a go",
+    "source_book": "UCN Songbook",
+    "source_page": 53
+  },
+  {
+    "id": 50,
+    "title": "Our Adamas Belt",
+    "category": "Songs About Us",
+    "words": "Lt. Cmdr. Ward",
+    "tune": "Original/unknown",
+    "lyrics": "Do you see\nThe navy warping in?\nWith the cocksure confidence\nThat they will always win\nAs if they never struggled\nNever had to go without\nOur forefathers were abandoned here\nEking out, year on year\nTheirs returned to plenty,\nwhile ours survived the drought.\n\nOh\nDo you see,\nthe UCN?\nThey were gone and now the bluebacks are back again\nMaking deals and taking space\nwith the stroke of a pen\nWhile we made do with the hand we were dealt\nBut they'll never understand it\nNever quite command it\nBecause it's our Adamas Belt\n\nOur Adamas Belt\nIts beauty and its dangers\nDon't belong to strangers\nFor forty years, we alone have dwelt\nSo, UCN, don't you see?\nYou can't take it all from me\nBecause it's my Adamas, our Adamas Belt",
+    "source_book": "UCN Songbook",
+    "source_page": 54
+  },
+  {
+    "id": 51,
+    "title": "I'm Just Ken",
+    "category": "Fragments and Works in Progress",
+    "words": "Lt. Cmdr. Kane",
+    "tune": "I'm Just Ken; Ronson & Wyatt",
+    "lyrics": "Cause I'm just Ken\nAnywhere else I'd be Captain\nIs it my destiny to live and die a life of Command mediocrity?\nI'm just XO\nBut I've got a medal of valour don't you know?\nWhat will it take for them to see Randolph's inadequacies",
+    "source_book": "UCN Songbook",
+    "source_page": 55
+  },
+  {
+    "id": 52,
+    "title": "It's a Long Way on the Takanami",
+    "category": "Fragments and Works in Progress",
+    "words": "Sub Lt. Smith & Lt. Lefe Grds",
+    "tune": "It's a Long Way to Tipperary; Judge & Williams",
+    "lyrics": "It's a long way on the Takanami\nIt's a long way to go\nFrom helm to rear engineering\nIs a mile and a half or so\nShuttle deployments, warp core resyncs beware!\n'Cause it's a long long way on the Takanami\nBut my heart's right there\n\nIt's a long ship, the Takanami,\nThere's some distance to go\nFrom helm to the warp core\nFeels about a mile or so\nShuttle redeployments\nAnd damage con beware\n'Cause it's a long way on Takanami\nBut my heart's right there\n\nIt's a short ship, the noble Havock\nQuite well laid out\nNo need for a sickbay\nBiggest problem there is gout\nOnly thing that's missing\nIn the ready room's a fridge\nBut the problem on the Havock\nIs the toilet's on the bridge",
+    "source_book": "UCN Songbook",
+    "source_page": 55
+  },
+  {
+    "id": 53,
+    "title": "Pack Up Your Troubles in Your Old Kit-Bag",
+    "category": "Fragments and Works in Progress",
+    "words": "Lt. Lefe Grds",
+    "tune": "Pack Up Your Troubles in Your Old Kit Bag; Felix Powell",
+    "lyrics": "Pack up the OCPs in your kit bag\nTo the captain, just smile\nAdd a few crystals 'fore they resonate\nFor damage con that's the style\nWhat's the use of lockers\nThey never were worthwhile\nSo pack all your spares in your old kit bag\nAnd Smile, Smile, Smile\n\n[Note: Can be sung simultaneously as a counterpoint to \"It's a Long Way on the Takanami\" as a quodlibet]",
+    "source_book": "UCN Songbook",
+    "source_page": 56
+  },
+  {
+    "id": 54,
+    "title": "Take me Home, London Base",
+    "category": "Fragments and Works in Progress",
+    "words": "Sub Lt. Smith",
+    "tune": "Take me Home, Country Roads; Bill Danoff, Taffy Nivert & John Denver",
+    "lyrics": "London Base\nPlease beam me up\nTo the place\nThat I can sup\nWarspite Mess Hall\nAdamas Cluster\nTake me home\nSweet teleporter",
+    "source_book": "UCN Songbook",
+    "source_page": 56
+  },
+  {
+    "id": 55,
+    "title": "Spanish Ladies",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Spanish Ladies; trad",
+    "lyrics": "Farewell and adieu to you Spanish Ladies\nFarewell and adieu to you ladies of Spain;\nFor we're under orders for to sail for old England\nAnd we may never see you fair ladies again\n\nWe'll rant and we'll roar like true British sailors\nWe'll range and we'll roam all on the salt seas\nUntil we strike soundings in the channel of old England;\nFrom Ushant to Scilly is thirty-five leagues\n\nWe hove our ship to with the wind from sou'west, boys\nWe hove our ship to, deep soundings to take;\nWe rounded and sounded, got forty-five fathoms\nThen we squared our main yard and up channel steered we\n\nNow the first land we made it is called the Deadman\nNext Rame Head off Plymouth, off Portland, the Wight;\nThen we sailed by Beachy, by Fairley and Dungeness\n'til we came abreast of the South Foreland light\n\nThen the signal was made for the grand fleet to anchor\nAnd all in the Downs that night for to lie;\nLet go your shank painter, let go your cat stopper\nHaul up your clewgarnets, let tacks and sheets fly!\n\nNow let ev'ry man toss off a full bumper\nAnd let ev'ry man drink off a full glass;\nWe'll drink and be jolly and drown melancholy\nSinging \"Here's to the health of each true-hearted soul\"",
+    "source_book": "Traditional Songs",
+    "source_page": 2
+  },
+  {
+    "id": 56,
+    "title": "The Golden Vanity",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "The Golden Vanity; trad",
+    "lyrics": "There was a bonny ship from the northern country\nThe name of the ship was the Golden Vanity\nOne day they were hunted by the Spanish enemy\nTo sink her in the lowland, lowland, low\n\nChorus:\nSink her in the lowland sea\nLowland, lowland, sink her in the lowland sea\n\nWell up spoke the cabin boy, a gallant heart had he\nTell me captain what is it that you will give to me\nIf I were to swim up to the Spanish enemy\nAnd sink her in the lowland, lowland, low\n\nRepeat chorus\n\nWell if you were to sink her, if you were to be so bold,\nI will give you riches and my daughter's hand to hold,\nYou will live in wedded bliss until you both grow old\nSo sink her in the lowland, lowland, low\n\nRepeat chorus\n\nThen the boy made ready and overboard sprang he\nAnd he swam with all his might to the Spanish enemy\nDrilled six holes into her hull and then another three\nTo sink her in the lowland, lowland, low\n\nRepeat chorus\n\nThen quickly he swam back to the cheering of the crew\nBut the captain would not heed him, his promise he did rue\nAnd he scorned his poor entreatings when loudly he did sue\nAnd left him in the lowland, lowland, low\n\nRepeat chorus\n\nThen his messmates drew him up, but on the deck he died\nThey wrapped him in his hammock, it was so long and wide,\nThey cast the gallant cabin boy over the ship's side,\nAnd he sank down in the Lowland, Lowland, low\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 3
+  },
+  {
+    "id": 57,
+    "title": "Over the Hills and Far Away (for Anne)",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Over the Hills and Far Away; trad",
+    "lyrics": "Hark! Now the drums beat up again\nWe're all true soldiers gentlemen\nThen let us 'list and march I say\nOver the hills and far away\n\nOver the hills and o'er the main\nTo Flanders, Portugal and Spain\nQueen Anne commands and we'll obey\nOver the hills and far away\n\nGentlemen who have a mind\nTo serve a Queen both good and kind\nTo 'list and enter into pay\nThen over the hills and far away\n\nNo more sound from drum retreat\nWith Marlborough and Gallaway beat\nFrench and Spaniards every day\nWhen o'er the hills and far away\n\nForty shillings on the drum\nFor those who volunteer to come\nWith shirts and clothes and pleasant pay\nWhen over the hills and far away\n\nThe' 'Prentice Tom he may refuse\nTo wipe his angry master's shoes\nFor then he's free to sing and play\nOver the hills and far away\n\nWe then shall lead more happy lives\nBy getting rid of brats and wives\nThat scold on both the night and day\nOver the hills and far away\n\nFor if we go 'tis one to ten\nBut we return all gentlemen\nGentlemen as well as they\nBut over the hills and far away",
+    "source_book": "Traditional Songs",
+    "source_page": 4
+  },
+  {
+    "id": 58,
+    "title": "Over the Hills and Far Away (for George)",
+    "category": "Traditional Songs",
+    "words": "Traditional & John Tams",
+    "tune": "Over the Hills and Far Away; trad",
+    "lyrics": "Here's forty shillings on the drum\nFor those who volunteer to come,\nTo 'list and fight the foe today\nOver the Hills and far away\n\nChorus:\nO'er the hills and o'er the Main\nThrough Flanders, Portugal and Spain\nKing George commands and we obey\nOver the hills and far away.\n\nWhen duty calls me I must go\nTo stand and face another foe\nBut part of me will always stray\nOver the hills and far away\n\nRepeat chorus\n\nIf I should fall to rise no more\nAs many comrades did before\nThen ask the pipes and drums to play\nOver the hills and far away\n\nRepeat chorus\n\nThen fall in lads behind the drum\nWith colours blazing like the sun\nAlong the road to come what may\nOver the hills and far away\n\nRepeat chorus\n\nThrough smoke and fire\nAnd shot and shell\nAnd to the very walls of hell\nBut we shall stand and we shall stay\nOver the hills and far away\n\nRepeat chorus\n\nThough I may travel far from Spain\nPart of me shall still remain\nFor you are with me night and day\nAnd over the hills and far away\n\nRepeat chorus\n\nWhen evil stalks upon the land\nI'll neither hold nor stay me hand\nBut fight to win a better day\nOver the hills and far away\n\nRepeat chorus\n\nLet kings and tyrants come and go\nI'll stand ajudged by what I know\nA soldier's life I'll n'er gainsay\nOver the hills and far away\n\nRepeat chorus\n\nOld Wellington, he scratched his bum\nHe says, 'Boney lad, thee's had thee fun'\nMy riflemen will win the day\nOver the hills and far away\n\nRepeat chorus\n\nWhen kings and tyrants come and go\nA soldier's life is all I know.\nI'll have to fight another day\nOver the hills and far away\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 5
+  },
+  {
+    "id": 59,
+    "title": "Lukey's Boat",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Lukey's Boat; trad",
+    "lyrics": "Now Lukey's boat was painted green,\nA-ha, me boys!\nLukey's new boat was painted green,\nThe prettiest boat that you've ever seen,\nA-ha, me boys riddle-i-day!\n\nNow the Vicar christened her boat Bunny,\nA-ha, me boys!\nThe Vicar christened her boat Bunny,\nFor rabbits and vicars they just ain't funny\nA-ha, me boys riddle-i-day!\n\nIt was Friday morn when he put to sea\nA-ha, me boys!\nA Friday morn when he went to sea\nHe took a pasty for his tea\nA-ha, me boys riddle-i-day!\n\nNow Lukey steamed down in the bay\nA-ha, me boys!\nLukey steamed down in the bay\nTo catch some lobsters through the day\nA-ha, me boys riddle-i-day!\n\nNow Lukey had a fine great catch,\nA-ha, me boys!\nLukey had a fine great catch,\nThe lobsters filled up through the hatch,\nA-ha, me boys riddle-i-day!\n\nNow Lukey didn't know it were a sin\nA-ha, me boys!\nLukey didn't know it were a sin\nTo whistle at sea cos you're whistling the wind\nA-ha, me boys riddle-i-day!\n\nNow a tonne of lobsters filled the boat\nA-ha, me boys!\nA tonne of lobsters filled the boat\nThe poor old bunny just couldn't float\nA-ha, me boys riddle-i-day!\n\nThe bunny sank into the blue\nA-ha, me boys!\nThe bunny sank into the blue\nThe pasty, the lobsters and the vicar too\nA-ha, me boys riddle-i-day!\n\nNow Lukey's new boat was painted green,\nA-ha, me boys!\nLukey's new boat was painted green,\nThe unluckiest boat that you've ever seen,\nA-ha, me boys riddle-i-day!",
+    "source_book": "Traditional Songs",
+    "source_page": 7
+  },
+  {
+    "id": 60,
+    "title": "Botany Bay",
+    "category": "Traditional Songs",
+    "words": "Wilhelm Meyer Lutz",
+    "tune": "Botany Bay; Wilhelm Meyer Lutz",
+    "lyrics": "Farewell to Old England forever\nFarewell to my rum culls as well\nFarewell to the well known Old Bailee\nWhere I used for to cut such a swell\n\nChorus:\nSinging toorali-orali-addity\nSinging toorali-oolari-ai\nSinging toorali-ollari-addity\nWe're bound for Botany Bay\n\n'Taint leaving Old England we cares about\n'Taint 'cos we mispells wot we knows\nBut becos all we light fingered gentry\nHop's around with a log on our toes\n\nRepeat chorus\n\nThere's the captain as is our commander\nThere's bo'sun and all the ship's crew\nThere's first and the second class passengers\nKnows what we poor convicts goes through\n\nRepeat chorus\n\nOh had I wings of a turtle-dove\nI'd soar on my pinions so high\nSlap bang to the arms of my Polly love\nAnd in her sweet presence I'd die\n\nRepeat chorus\n\nNow all my young Dookies and Duchesses\nTake warning from what I've to say\nMind all is your own as you toucheses\nOr you'll find us in Botany Bay\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 9
+  },
+  {
+    "id": 61,
+    "title": "Nelson's Blood",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Roll the Old Chariot; trad",
+    "lyrics": "Well a drop 'a Nelson's blood wouldn't do us any harm\n(And a drop 'a Nelson's blood wouldn't do us any harm)\nAnd a drop 'a Nelson's blood wouldn't do us any harm\nAnd we'll all hang on behind\n\nChorus:\nCome on and roll the old chariot along\n(Yes, we'll) roll the old chariot along\n(Come on and) roll the old chariot along\nAnd we'll all hang on behind\n\nAnd a damn good floggin' wouldn't do us any harm\n(And a damn good floggin' wouldn't do us any harm)\nAnd a damn good floggin' wouldn't do us any harm\nAnd we'll all hang on behind\n\nRepeat chorus\n\nAnd a nice fat cook wouldn't do us any harm\n(And a nice fat cook wouldn't do us any harm)\nAnd a nice fat cook wouldn't do us any harm\nAnd we'll all hang on behind\n\nRepeat chorus\n\nAnd a night with the girls wouldn't do us any harm\n(And a night with the girls wouldn't do us any harm)\nAnd a night with the girls wouldn't do us any harm\nAnd we'll all hang on behind\n\nRepeat chorus\n\nAnd a roll in the clover wouldn't do us any harm\n(And a roll in the clover wouldn't do us any harm)\nAnd a roll in the clover wouldn't do us any harm\nAnd we'll all hang on behind\n\nRepeat chorus\n\nWell a drop 'a Nelson's blood wouldn't do us any harm\n(And a drop 'a Nelson's blood wouldn't do us any harm)\nAnd a drop 'a Nelson's blood wouldn't do us any harm\nAnd we'll all hang on behind\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 10
+  },
+  {
+    "id": 62,
+    "title": "Barrett's Privateers",
+    "category": "Traditional Songs",
+    "words": "Stan Rogers",
+    "tune": "Barrett's Privateers; Stan Rogers",
+    "lyrics": "Oh, the year was 1778\nHow I wish I was in Sherbrooke now\nA letter of marque came from the king\nTo the scummiest vessel I've ever seen\n\nChorus:\nGod damn them all, I was told\nWe'd cruise the seas for American gold\nWe'd fire no guns, shed no tears\nNow I'm a broken man on a Halifax pier\nThe last of Barrett's Privateers\n\nOh, Elcid Barrett cried the town\nHow I wish I was in Sherbrooke now\nFor twenty brave men, all fishermen, who\nWould make for him the Antelope's crew\n\nRepeat chorus\n\nThe Antelope sloop was a sickening sight\nHow I wish I was in Sherbrooke now\nShe'd a list to the port and her sails in rags\nAnd the cook in the scuppers with the staggers and jags\n\nRepeat chorus\n\nOn the King's birthday, we put to sea\nHow I wish I was in Sherbrooke now\nWe were ninety-one days to Montego Bay\nPumping like madmen all the way\n\nRepeat chorus\n\nOn the ninety-sixth day, we sailed again\nHow I wish I was in Sherbrooke now\nWhen a bloody great Yankee hove in sight\nWith our cracked four pounders, we made to fight\n\nRepeat chorus\n\nThe Yankee lay low down with gold\nHow I wish I was in Sherbrooke now\nShe was broad and fat and loose in the stays\nBut to catch her took the Antelope two whole days\n\nRepeat chorus\n\nThen at length, we stood two cables away\nHow I wish I was in Sherbrooke now\nOur cracked four pounders made an awful din\nBut with one fat ball, the Yank stove us in\n\nRepeat chorus\n\nThe Antelope shook and pitched on her side\nHow I wish I was in Sherbrooke now\nBarrett was smashed like a bowl of eggs\nAnd the main truck carried off both me legs\n\nRepeat chorus\n\nSo here I lay in my twenty-third year\nHow I wish I was in Sherbrooke now\nIt's been six years since we sailed away\nAnd I just made Halifax yesterday\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 11
+  },
+  {
+    "id": 63,
+    "title": "Shanty Man",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Shanty Man; trad",
+    "lyrics": "Now modern ships carry mighty funny gear\n(And away, get away, you shanty man!)\nAin't seen a halyard for many's a year\n(And they got no use for a shanty man)\n\nSlick new fittings are all your style\n(And away, get away, you shanty man!)\nAll very clever, but they just ain't right\n(And they got no use for a shanty man)\n\nChorus:\nShanty man, oh shanty man!\nWho's got a berth for a shanty man?\nSing you a song of a world gone wrong\nWhen they got no use for a shanty man\n\nLevers to pull and buttons to press\n(And away, get away, you shanty man!)\nReal-life sailors who need 'em less\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nFloating computer dressed as a ship\n(And away, get away, you shanty man!)\nSkippered and crewed by a microchip\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nSoon they'll be sailin' by remote control\n(And away, get away, you shanty man!)\nThat'll be pleasin' for the owner's soul\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nSend the ships from dock to dock\n(And away, get away, you shanty man!)\nWhile sat upon our arses in an office block\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nNew-fangled gear's no use to you\n(And away, get away, you shanty man!)\nWhen you're off Cape Horn with your faces blue\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nThen's the time you rue the day\n(And away, get away, you shanty man!)\nYou sent your shanty man away\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nA sailor's life it once was hard\n(And away, get away, you shanty man!)\nWhile laid out aloft on a topsail yard\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nNow it don't matter if the wind blow high\n(And away, get away, you shanty man!)\nYou can take force ten with your feet still dry\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nListen at night that you might hear\n(And away, get away, you shanty man!)\nA ghostly sound on a cool night air\n(And they got no use for a shanty man)\n\nRepeat chorus\n\nWas it a ghost from a distant past\n(And away, get away, you shanty man!)\nOr just a breeze in the radar mast?\n(And they got no use for a shanty man)\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 13
+  },
+  {
+    "id": 64,
+    "title": "Drunken Sailor",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Drunken Sailor; trad",
+    "lyrics": "What shall we do with a drunken sailor? x3\nEarlye in the morning\n\nChorus:\nWeigh heigh and up she rises x3\nEarlye in the morning\n\nShave his belly with a rusty razor x3\nEarlye in the morning\n\nRepeat chorus\n\nStick him in the scuppers with a hosepipe on him x3\nEarlye in the morning\n\nRepeat chorus\n\nHeave him by the leg in a runnin' bowline x3\nEarlye in the morning\n\nRepeat chorus\n\nGive 'im a taste of the bosun's rope-end x3\nEarlye in the morning\n\nRepeat chorus\n\nPut him in the brig until he's sober x3\nEarlye in the morning\n\nRepeat chorus\n\nThat's what we do with a drunken sailor x3\nEarlye in the morning\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 15
+  },
+  {
+    "id": 65,
+    "title": "Here's a Health to the Company",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Here's a Health to the Company; trad",
+    "lyrics": "Kind friends and companions, come join me in rhyme\nCome lift up your voices in chorus with mine\nCome lift up your voices, all grief to refrain\nFor we may or might never all meet here again\n\nChorus:\nHere's a health to the company and one to my lass\nLet us drink and be merry all out of one glass\nLet us drink and be merry, all grief to refrain\nFor we may or might never all meet here again\n\nHere's a health to the dear lass that I love so well\nFor her style and her beauty, sure none can excel\nThere's a smile on her countenance as she sits on my knee\nThere's no man in this wide world as happy as me\n\nRepeat chorus\n\nOur ship lies at anchor, she's ready to dock\nI wish her safe landing, without any shock\nIf ever I should meet you by land or by sea\nI will always remember your kindness to me\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 16
+  },
+  {
+    "id": 66,
+    "title": "Bound for South Australia",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Bound for South Australia; trad",
+    "lyrics": "In South Australia I was born\nTo me heave away, haul away\nIn South Australia round Cape Horn\nWe're bound for South Australia\n\nChorus:\nHaul away you rolling kings\nTo me heave away, haul away\nHaul away, you'll hear me sing\nWe're bound for South Australia\n\nAs I walked out one morning fair\nTo me heave away, haul away\n'Twas there I met Miss Nancy Blair\n\nRepeat chorus\n\nI shook her up and I shook her down\nTo me heave away, haul away\nI shook her round and round the town\n\nRepeat chorus\n\nI run her all night and I run her all day\nTo me heave away, haul away\nAnd I run her until we sailed away\n\nRepeat chorus\n\nThere ain't but one thing grieves me mind\nTo me heave away, haul away\nTo leave Miss Nancy Blair behind\n\nRepeat chorus\n\nAnd as we wallop around Cape Horn\nTo me heave away, haul away\nYou'll wish to God you'd never been born\n\nRepeat chorus\n\nIn South Australia my native land\nTo me heave away, haul away\nFull of rocks and thieves and fleas and sand\n\nRepeat chorus\n\nI wish I was on Australia's strand\nTo me heave away, haul away\nWith a bottle of whiskey in my hand\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 17
+  },
+  {
+    "id": 67,
+    "title": "Leave Her, Johnny",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "Leave Her, Johnny; trad",
+    "lyrics": "I thought I heard the Old Man say:\n\"Leave her, Johnny, leave her.\"\nTomorrow you will get your pay\nAnd it's time for us to leave her\n\nChorus:\nLeave her, Johnny, leave her!\nOh, leave her, Johnny, leave her!\nFor the voyage is long and the winds don't blow\nAnd it's time for us to leave her\n\nOh, the wind was foul and the sea ran high\n\"Leave her, Johnny, leave her!\"\nShe shipped it green and none went by\nAnd it's time for us to leave her\n\nRepeat chorus\n\nI hate to sail on this rotten tub\n\"Leave her, Johnny, leave her!\"\nNo grog allowed and rotten grub\nAnd it's time for us to leave her\n\nRepeat chorus\n\nWe swear by rote for want of more\n\"Leave her, Johnny, leave her!\"\nBut now we're through so we'll go on shore\nAnd it's time for us to leave her\n\nRepeat chorus",
+    "source_book": "Traditional Songs",
+    "source_page": 18
+  },
+  {
+    "id": 68,
+    "title": "Hoist the Colours",
+    "category": "Movie/TV",
+    "words": "Ted Elliott & Terry Rossio",
+    "tune": "Hoist the Colours; Hans Zimmer (Pirates of the Caribbean: At World's End)",
+    "lyrics": "Yo, Ho haul together, hoist the colours high\nHeave ho, thieves and beggars, never shall we die\nYo, Ho haul together, hoist the colours high\nHeave ho, thieves and beggars, never shall we die\n\nThe King and his men stole the queen from her bed\nand bound her in her bones\nThe seas be ours and by the powers\nWhere we will...we'll roam\n\nChorus:\nYo, Ho haul together, hoist the colours high\nHeave ho, thieves and beggars, never say we die\n\nSome men have died and some are alive\nAnd others sail on the sea\nWith the keys to the cage\nAnd the devil to pay\nWe lay to Fiddler's Green!\n\nRepeat chorus\n\nThe bell has been raised from its watery grave\nDo you hear its sepulchral tone?\nA Call to all, pay heed to the squall\nAnd turn your sail towards home!\n\nRepeat chorus",
+    "source_book": null,
+    "source_page": null
+  },
+  {
+    "id": 69,
+    "title": "Bink's Brew",
+    "category": "Movie/TV",
+    "words": "Kohei Tanaka / Shinji Mishima",
+    "tune": "Bink's Brew (Binks' Sake); One Piece",
+    "lyrics": "[Refrain]\nYo-hohoho, yo-hoho-ho\nYo-hohoho, yo-hoho-ho\nYo-hohoho, yo-hoho-ho\nYo-hohoho, yo-hoho-ho\n\n[Verse 1]\nGather up all of the crew!\nIt's time to ship out Bink's brew!\nSea wind blows. To where?\nWho knows?\nThe waves will be our guide!\nO'er across the ocean's tide\nRays of sunshine far and wide\nBirds they sing of cheerful things, in circles passing by!\n\nChorus:\nBid farewell to weaver's town!\nSay so long to port renowned!\nSing a song, it won't be long, before we're casting off!\nCross the gold and silver seas\nThe salty spray puts us at ease!\nDay and night to our delight\nThe voyage never ends!\n\nRepeat refrain\n\n[Verse 2]\nGather up all of the crew!\nIt's time to ship out Bink's brew!\nPirates we, eternally are challenging the sea!\nWith the waves to rest our heads\nShip beneath us as our beds!\nHoisted high upon the mast our Jolly Roger flies!\n\n[Second Chorus]\nSomewhere in the endless sky\nStormy winds are blowin' by!\nWaves are dancing, evening comes\nIt's time to sound the drums!\nBut steady men may never fear!\nTomorrow's skies are always clear!\nSo pound your feet and clap your hands till sunny days return!\n\nRepeat refrain\n\n[Verse 3]\nGather up all of the crew!\nIt's time to ship out Bink's brew!\nWave good-bye, but don't you cry\nOur memories remain\nOur days are but a passing dream, everlasting though they seem\n'neath the moon we'll meet again, the wind's our lullaby!\n\n[Final Chorus]\nGather up all of the crew!\nIt's time to ship out Bink's brew!\nSing a song and play along\nFor all the ocean's wide!\nAfter all is said and done\nYou'll end up a skeleton!\nSo spread your tale, from dawn till dusk, upon these foamy seas!\n\n[Outro]\nYo-hohoho, yo-hoho-ho\nYo-hohoho, yo-hoho-ho\nYo-hohoho, yo-hoho-ho\nYo-hohoho, yo-hoho-ho",
+    "source_book": null,
+    "source_page": null
+  },
+  {
+    "id": 70,
+    "title": "The Rattlin' Bog",
+    "category": "Traditional Songs",
+    "words": "Traditional",
+    "tune": "The Rattlin' Bog; trad (Irish)",
+    "lyrics": "Chorus:\nHo-ho, the rattlin' bog\nThe bog down in the valley-o\nRare bog, the rattlin' bog\nThe bog down in the valley-o\n\nWell, in the bog there was a hole\nA rare hole, a rattlin' hole\nHole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nWell, in the hole there was a tree\nA rare tree, a rattlin' tree\nTree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the tree there was a branch\nA rare branch, a rattlin' branch\nBranch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the branch there was a limb\nA rare limb, a rattlin' limb\nLimb on the branch\nAnd the branch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nWell, on the limb there was a nest\nA rare nest, a rattlin' nest\nNest on the limb\nAnd the limb on the branch\nAnd the branch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nIn the nest there was a bird\nA rare bird, a rattlin' bird\nBird in the nest\nAnd the nest on the limb\nAnd the limb on the branch\nAnd the branch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nIn the bird there was an egg\nA rare egg, a rattlin' egg\nEgg on the bird\nAnd the bird in the nest\nAnd the nest on the limb\nAnd the limb on the branch\nAnd the branch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nIn that egg there was a bird\nA rare bird, a rattlin' bird\nAnd the bird on the egg\nAnd the egg on the bird\nAnd the bird in the nest\nAnd the nest on the limb\nAnd the limb on the branch\nBranch on the tree\nTree in the hole\nHole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the bird there was a feather\nA rare feather, a rattlin' feather\nAnd the feather on the bird\nAnd the bird on the egg\nAnd the egg on the bird\nAnd the bird in the nest\nAnd the nest on the limb\nAnd the limb on the branch\nAnd the branch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the feather there was a worm\nA rare worm, a rattlin' worm\nWorm on the feather\nFeather on the bird\nBird in the egg\nEgg in the bird\nBird in the nest\nNest on the limb\nLimb on the branch\nBranch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the worm there was a hair\nA rare hair, a rattlin' hair\nAnd the hair on the worm\nAnd the worm on the feather\nFeather on the bird\nBird in the egg\nEgg in the bird\nBird in the nest\nNest on the limb\nLimb on the branch\nBranch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the hair there was a louse\nA rare louse, a rattlin' louse\nAnd the louse on the hair\nAnd the hair on the worm\nAnd the worm on the feather\nFeather on the bird\nBird in the egg\nEgg in the bird\nBird in the nest\nNest on the limb\nLimb on the branch\nBranch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the louse there was a tick\nA rare tick, a rattlin' tick\nAnd the tick on the louse\nAnd the louse on the hair\nAnd the hair on the worm\nAnd the worm on the feather\nFeather on the bird\nBird in the egg\nEgg in the bird\nBird in the nest\nNest on the limb\nLimb on the branch\nBranch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus\n\nOn the tick there was a rash\nA rare rash, a rattlin' rash\nAnd the rash on the tick\nAnd the tick on the louse\nAnd the louse on the hair\nAnd the hair on the worm\nAnd the worm on the feather\nFeather on the bird\nBird in the egg\nEgg in the bird\nBird in the nest\nNest on the limb\nLimb on the branch\nBranch on the tree\nAnd the tree in the hole\nAnd the hole in the bog\nAnd the bog down in the valley-o\n\nRepeat chorus",
+    "source_book": null,
+    "source_page": null
+  },
+  {
+    "id": 71,
+    "title": "Where Is My...?",
+    "category": "Improvised Songs",
+    "words": "Lt Fin",
+    "tune": "All for Me Grog; trad (Irish)",
+    "lyrics": "[Template Structure]\nWhere is my [ITEM]?\n\nWhere are me [ITEM], me noggin, noggin [ITEM]\nThey're all gone for beer and tobacco\n[Improvise 2 lines about the [ITEM]]\nAnd the [ITEM] is looking for better weather\n\nChorus:\nAnd it's all for me grog\nMe jolly, jolly grog\nAll for the beer and tobacco\nWell I spent all me tin\nOn the lassies drinking gin\nAcross the western ocean I must wander\n\n[Repeat with a new [ITEM] each round!]\n\n[Example verse - OCP]\nWhere's me OCP, me noggin, noggin OCP\nThey're all gone for beer and tobacco\nWell I have no shields to protect\nNOW I'VE PISSED OFF DENT\nAnd the Hull is looking for better weather\n\nRepeat chorus",
+    "source_book": null,
+    "source_page": null
+  }
+]
+</script>
+
+<div id="app">
+  <header class="hdr">
+    <div class="hdr-l">
+      <img class="logo" src="data:image/png;base64,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" alt="UCN">
+      <span class="site-title">UCN Songbook</span>
+    </div>
+    <div class="hdr-r">
+      <button class="ibtn" id="btn-about" title="About">&#9432;</button>
+      <button class="ibtn" id="btn-rand" title="Random song">&#127922;</button>
+      <button class="ibtn" id="btn-settings" title="Settings">&#9881;&#65039;</button>
+    </div>
+  </header>
+  <div id="list-view">
+    <div class="sw"><div class="sb"><span class="si">&#128269;</span><input class="sinp" id="search-input" type="search" placeholder="Search songs or tunes..." autocomplete="off" spellcheck="false"><button class="xcbtn" id="xcbtn" aria-label="Clear">&#10005;</button></div></div>
+    <div class="cw"><div class="cats" id="cat-tabs"></div></div>
+    <div class="lmeta" id="list-meta"></div>
+    <div class="slist" id="song-list"></div>
+  </div>
+  <div id="detail-view">
+    <div class="dbar">
+      <button class="bbtn" id="btn-back">&#8592; Back</button>
+      <div class="dact">
+        <button class="ibtn" id="btn-fav" title="Favourite">&#9734;</button>
+        <button class="ibtn" id="btn-drand" title="Random">&#127922;</button>
+      </div>
+    </div>
+    <div class="sinfo" id="song-info"></div>
+    <div class="lw" id="lw"></div>
+  </div>
+  <div class="scbar" id="scbar">
+    <button class="sctog" id="sctog">&#9208; Pause</button>
+    <label>Speed</label>
+    <input type="range" id="sc-speed" min="1" max="10" value="3">
+  </div>
+</div>
+
+<div class="overlay" id="sov"></div>
+<div class="panel" id="spanel">
+  <div class="sh"></div><div class="stitle">Settings</div>
+  <div class="srow"><div class="slabel">&#9835; Highlight Choruses</div><label class="tog"><input type="checkbox" id="tog-chorus" checked><span class="tslider"></span></label></div>
+  <div class="srow"><div class="slabel">&#9835; Chorus Display</div><div class="fbtns"><button class="fbtn cdbtn active" data-cd="once">Once only</button><button class="fbtn cdbtn" data-cd="full">Every time</button></div></div>
+  <div class="srow"><div class="slabel">&#8597; Auto-Scroll</div><label class="tog"><input type="checkbox" id="tog-scroll"><span class="tslider"></span></label></div>
+  <div class="srow" id="speed-row" style="display:none"><div class="slabel">Scroll Speed</div><div class="spw"><span class="spl">&#128034;</span><input type="range" id="st-speed" min="1" max="10" value="3"><span class="spl">&#128640;</span></div></div>
+  <div class="srow"><div class="slabel">Aa Font</div><div class="fbtns"><button class="fbtn active" data-font="system">Default</button><button class="fbtn" data-font="exo">Exo 2</button><button class="fbtn" data-font="dyslexic">Dyslexic</button></div></div>
+  <div class="srow"><div class="slabel">Text Size</div><div class="szw"><button class="szbtn" id="size-down">A&#8722;</button><span class="szval" id="size-val">16px</span><button class="szbtn" id="size-up">A+</button></div></div>
+</div>
+
+<div class="overlay" id="aov"></div>
+<div class="panel" id="apanel">
+  <div class="sh"></div>
+  <div class="about-logo"><img src="data:image/png;base64,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" alt="UCN Logo"></div>
+  <div class="stitle" style="margin-bottom:4px">UCN Songbook</div>
+  <p style="text-align:center;font-size:.8rem;color:var(--text-dim);margin-bottom:16px">Updated 26 June 2026</p>
+  <div class="about-section"><h3>Made by</h3><p>Sub Lt Tetra &mdash; Discord: <strong>finlay3110</strong></p></div>
+  <div class="about-section"><h3>Original Songbook</h3><p>Compiled by Lt. Cmdr. Jim &mdash; Ship&#39;s Councillor</p></div>
+  <div class="about-section"><h3>Request updates</h3><p>Post in the <strong>#songbook</strong> channel on the BC Discord server, or DM Tetra directly.</p></div>
+  <div class="about-section"><h3>Disclaimer</h3>
+    <div class="disclaimer-box">
+      <p>The UCN logo is the property of Bridge Command / The London Space Elevator Limited.</p>
+      <p>This is a fan-made project and is not approved by or affiliated with Bridge Command / The London Space Elevator Limited.</p>
+      <p>Song lyrics are the property of their respective copyright holders. UCN-themed songs are reproduced here as original fan parodies.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const SONGS = JSON.parse(document.getElementById('songs-data').textContent);
+
+const CATEGORIES = ['All', ...new Set(SONGS.map(s => s.category))];
+const CAT_ICONS = {
+  'Patriotic Songs':'\uD83D\uDE80','Bar/Drinking Songs':'\uD83C\uDF7A','Crew Ballads':'\uD83E\uDD41',
+  'Accompanied Songs':'\uD83C\uDFB5','Songs About Us':'\u2B50',
+  'Fragments and Works in Progress':'\uD83D\uDCDD','Traditional Songs':'\u2693',
+  'Movie/TV':'\uD83C\uDFAC','Improvised Songs':'\uD83C\uDFAD'
+};
+let state={category:'All',query:'',currentSong:null,favourites:[],highlightChorus:true,chorusDisplay:'once',autoScroll:false,scrollPaused:false,scrollSpeed:3,fontSize:16,font:'system'};
+try{var _s=JSON.parse(localStorage.getItem('ucn_s')||'{}');if(_s.f)state.favourites=_s.f;if(_s.hc!==undefined)state.highlightChorus=_s.hc;if(_s.cd)state.chorusDisplay=_s.cd;if(_s.sp)state.scrollSpeed=_s.sp;if(_s.fs)state.fontSize=_s.fs;if(_s.fn)state.font=_s.fn;}catch(e){}
+function saveState(){try{localStorage.setItem('ucn_s',JSON.stringify({f:state.favourites,hc:state.highlightChorus,cd:state.chorusDisplay,sp:state.scrollSpeed,fs:state.fontSize,fn:state.font}));}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function filteredSongs(){var q=state.query.toLowerCase();return SONGS.filter(function(s){if(state.category!=='All'&&s.category!==state.category)return false;if(!q)return true;return s.title.toLowerCase().indexOf(q)>-1||(s.tune&&s.tune.toLowerCase().indexOf(q)>-1)||(s.words&&s.words.toLowerCase().indexOf(q)>-1);});}
+function chorusBlockHtml(lines){var hl=state.highlightChorus;var html='<div class="lyric-chorus'+(hl?'':' no-highlight')+'"><div class="chorus-label">\u266A Chorus</div>';html+=lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('');return html+'</div>';}
+function renderLyrics(lyrics){var blocks=lyrics.split('\n\n'),html='',chorusLines=null;for(var i=0;i<blocks.length;i++){var block=blocks[i],lines=block.split('\n'),first=(lines[0]||'').trim();if(!first)continue;if(/^\[.+\]$/.test(first)&&lines.length<=2){html+='<div class="lyric-section-label">'+esc(first.slice(1,-1))+'</div>';continue;}if(/^repeat /i.test(first)&&lines.length<=2){if(state.chorusDisplay==='full'&&chorusLines)html+=chorusBlockHtml(chorusLines);else html+='<p class="lyric-instruction">&#8630; '+esc(block.trim())+'</p>';continue;}if(/^(chorus[\s\d]*:?|\[chorus[\s\d]*\])/i.test(first)){var content=lines.slice(1);if(!chorusLines)chorusLines=content;html+=chorusBlockHtml(content);continue;}html+='<div class="lyric-block">'+lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('')+'</div>';}return html;}
+function renderList(){var songs=filteredSongs(),el=document.getElementById('song-list'),meta=document.getElementById('list-meta');meta.textContent=songs.length===SONGS.length?SONGS.length+' songs':songs.length+' of '+SONGS.length+' songs';if(!songs.length){el.innerHTML='<div class="no-res"><div class="nr-icon">\uD83D\uDD2D</div><div>No songs found</div></div>';return;}var html='';for(var i=0;i<songs.length;i++){var s=songs[i],isFav=state.favourites.indexOf(s.id)>-1,icon=CAT_ICONS[s.category]||'\u266A';html+='<div class="song-card'+(isFav?' fav':'')+'" data-id="'+s.id+'"><div class="ci">'+icon+'</div><div class="cb"><div class="ct">'+esc(s.title);if(s.category==='Traditional Songs')html+='<span class="trad-badge">trad</span>';html+='</div><div class="cs">\uD83C\uDFB5 '+esc(s.tune)+'</div>';if(s.source_book)html+='<div class="cp">\uD83D\uDCD6 '+esc(s.source_book)+', p.'+s.source_page+'</div>';html+='</div><button class="cstar'+(isFav?' active':'')+'" data-fav="'+s.id+'">'+(isFav?'\u2605':'\u2606')+'</button></div>';}el.innerHTML=html;}
+function renderCategories(){var el=document.getElementById('cat-tabs'),html='';for(var i=0;i<CATEGORIES.length;i++){var c=CATEGORIES[i],label=c==='All'?'All':((CAT_ICONS[c]||'')+' '+c.split('/')[0].replace(' Songs','').replace(' Ballads','').replace(' in Progress','').trim());html+='<button class="cpill'+(state.category===c?' active':'')+'" data-cat="'+esc(c)+'">'+label.trim()+'</button>';}el.innerHTML=html;}
+function showSong(id){stopScroll();var song=null;for(var i=0;i<SONGS.length;i++){if(SONGS[i].id===id){song=SONGS[i];break;}}if(!song)return;state.currentSong=id;var tradBadge=song.category==='Traditional Songs'?'<span class="trad-badge">traditional</span>':'';var sourceRow=song.source_book?'<div class="ir source"><span>\uD83D\uDCD6</span><span>'+esc(song.source_book)+', p.'+song.source_page+'</span></div>':'';document.getElementById('song-info').innerHTML='<h1>'+esc(song.title)+tradBadge+'</h1><div class="ir"><span>\uD83C\uDFB5</span><span>'+esc(song.tune)+'</span></div><div class="ir"><span>\u270D\uFE0F</span><span>'+esc(song.words)+'</span></div>'+sourceRow;document.getElementById('lw').innerHTML=renderLyrics(song.lyrics);document.getElementById('lw').scrollTop=0;updateFavBtn();document.getElementById('list-view').style.display='none';document.getElementById('detail-view').classList.add('vis');if(state.autoScroll)startScroll();}
+function showList(){stopScroll();document.getElementById('detail-view').classList.remove('vis');document.getElementById('list-view').style.display='';state.currentSong=null;}
+function updateFavBtn(){var btn=document.getElementById('btn-fav'),isFav=state.favourites.indexOf(state.currentSong)>-1;btn.textContent=isFav?'\u2605':'\u2606';btn.classList.toggle('active',isFav);}
+function toggleFav(id){var i=state.favourites.indexOf(id);if(i===-1)state.favourites.push(id);else state.favourites.splice(i,1);saveState();renderList();if(state.currentSong===id)updateFavBtn();}
+function randomSong(){var pool=filteredSongs();if(!pool.length)return;showSong(pool[Math.floor(Math.random()*pool.length)].id);}
+var scrollRAF=null,scrollAccum=0;
+function startScroll(){if(!state.currentSong)return;stopScroll();state.scrollPaused=false;document.getElementById('scbar').classList.add('vis');document.getElementById('sctog').textContent='\u23F8 Pause';document.getElementById('sctog').classList.remove('pau');var last=null;function tick(ts){if(!last)last=ts;var dt=ts-last;last=ts;scrollAccum+=state.scrollSpeed*0.015*dt/16;if(scrollAccum>=1){var el=document.getElementById('lw'),px=Math.floor(scrollAccum);el.scrollTop+=px;scrollAccum-=px;if(el.scrollTop>=el.scrollHeight-el.clientHeight-2){stopScroll();return;}}scrollRAF=requestAnimationFrame(tick);}scrollRAF=requestAnimationFrame(tick);}
+function stopScroll(){if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;}document.getElementById('scbar').classList.remove('vis');}
+function pauseScroll(){if(scrollRAF){cancelAnimationFrame(scrollRAF);scrollRAF=null;}state.scrollPaused=true;document.getElementById('sctog').textContent='\u25B6 Play';document.getElementById('sctog').classList.add('pau');}
+function resumeScroll(){state.scrollPaused=false;startScroll();}
+function openPanel(o,p){document.getElementById(o).classList.add('vis');document.getElementById(p).classList.add('vis');}
+function closePanel(o,p){document.getElementById(o).classList.remove('vis');document.getElementById(p).classList.remove('vis');}
+function applyFont(f){state.font=f;document.documentElement.removeAttribute('data-font');if(f!=='system')document.documentElement.setAttribute('data-font',f);document.querySelectorAll('.fbtn').forEach(function(b){b.classList.toggle('active',b.dataset.font===f);});saveState();}
+function applyFontSize(sz){state.fontSize=Math.max(12,Math.min(24,sz));document.documentElement.style.setProperty('--font-size',state.fontSize+'px');document.getElementById('size-val').textContent=state.fontSize+'px';saveState();}
+function applyChorusDisplay(v){state.chorusDisplay=v;document.querySelectorAll('.cdbtn').forEach(function(b){b.classList.toggle('active',b.dataset.cd===v);});if(state.currentSong)showSong(state.currentSong);saveState();}
+document.getElementById('tog-chorus').checked=state.highlightChorus;
+document.getElementById('tog-scroll').checked=state.autoScroll;
+document.getElementById('sc-speed').value=state.scrollSpeed;
+document.getElementById('st-speed').value=state.scrollSpeed;
+document.getElementById('speed-row').style.display=state.autoScroll?'':'none';
+applyFont(state.font);applyFontSize(state.fontSize);applyChorusDisplay(state.chorusDisplay);
+document.getElementById('tog-chorus').addEventListener('change',function(e){state.highlightChorus=e.target.checked;if(state.currentSong)showSong(state.currentSong);saveState();});
+document.getElementById('tog-scroll').addEventListener('change',function(e){state.autoScroll=e.target.checked;document.getElementById('speed-row').style.display=state.autoScroll?'':'none';if(state.autoScroll&&state.currentSong)startScroll();else stopScroll();saveState();});
+document.getElementById('sc-speed').addEventListener('input',function(e){state.scrollSpeed=+e.target.value;document.getElementById('st-speed').value=state.scrollSpeed;});
+document.getElementById('st-speed').addEventListener('input',function(e){state.scrollSpeed=+e.target.value;document.getElementById('sc-speed').value=state.scrollSpeed;saveState();});
+document.getElementById('sctog').addEventListener('click',function(){if(state.scrollPaused)resumeScroll();else pauseScroll();});
+document.querySelectorAll('.fbtn').forEach(function(b){b.addEventListener('click',function(){applyFont(b.dataset.font);});});
+document.querySelectorAll('.cdbtn').forEach(function(b){b.addEventListener('click',function(){applyChorusDisplay(b.dataset.cd);});});
+document.getElementById('size-up').addEventListener('click',function(){applyFontSize(state.fontSize+2);});
+document.getElementById('size-down').addEventListener('click',function(){applyFontSize(state.fontSize-2);});
+document.getElementById('btn-settings').addEventListener('click',function(){openPanel('sov','spanel');});
+document.getElementById('sov').addEventListener('click',function(){closePanel('sov','spanel');});
+document.getElementById('btn-about').addEventListener('click',function(){openPanel('aov','apanel');});
+document.getElementById('aov').addEventListener('click',function(){closePanel('aov','apanel');});
+document.getElementById('btn-back').addEventListener('click',showList);
+document.getElementById('btn-rand').addEventListener('click',randomSong);
+document.getElementById('btn-drand').addEventListener('click',randomSong);
+document.getElementById('btn-fav').addEventListener('click',function(){toggleFav(state.currentSong);});
+document.getElementById('search-input').addEventListener('input',function(e){state.query=e.target.value;document.getElementById('xcbtn').classList.toggle('vis',!!state.query);renderList();});
+document.getElementById('xcbtn').addEventListener('click',function(){state.query='';document.getElementById('search-input').value='';document.getElementById('xcbtn').classList.remove('vis');renderList();});
+document.getElementById('cat-tabs').addEventListener('click',function(e){var pill=e.target.closest('.cpill');if(!pill)return;state.category=pill.dataset.cat;renderCategories();renderList();});
+document.getElementById('song-list').addEventListener('click',function(e){var fav=e.target.closest('[data-fav]');if(fav){e.stopPropagation();toggleFav(+fav.dataset.fav);return;}var card=e.target.closest('.song-card');if(card)showSong(+card.dataset.id);});
+renderCategories();renderList();
+</script>
+</body>
+</html>
