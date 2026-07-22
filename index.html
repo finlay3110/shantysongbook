@@ -70,6 +70,9 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
    .icn-lg is for the few large centred icons (empty states, errors). */
 .icn{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;flex-shrink:0;}
 .icn-lg{width:2.4rem;height:2.4rem;vertical-align:middle;}
+.ibtn.spin .icn{animation:ibtn-spin 0.9s linear infinite;}
+@keyframes ibtn-spin{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion: reduce){.ibtn.spin .icn{animation:none;}}
 #btn-fav.active{color:var(--star)!important;background:rgba(227,154,62,0.12)!important;}
 .cb{flex:1;min-width:0;}.ct{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .cs{font-size:.75rem;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -139,6 +142,7 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
       <span class="site-title">UCN Songbook</span>
     </div>
     <div class="hdr-r">
+      <button class="ibtn" id="btn-export-pdf" title="Export Songbook PDF"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7,10 12,15 17,10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></button>
       <button class="ibtn" id="btn-about" title="About"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg></button>
       <button class="ibtn" id="btn-rand" title="Random song"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.15" fill="currentColor" stroke="none"/></svg></button>
       <button class="ibtn" id="btn-settings" title="Settings"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3.4M12 18.1v3.4M21.5 12h-3.4M5.9 12H2.5M18.9 5.1l-2.4 2.4M7.5 16.5l-2.4 2.4M18.9 18.9l-2.4-2.4M7.5 7.5 5.1 5.1"/></svg></button>
@@ -340,6 +344,59 @@ document.getElementById('size-down').addEventListener('click',function(){applyFo
 document.getElementById('btn-settings').addEventListener('click',function(){openPanel('sov','spanel');});
 document.getElementById('sov').addEventListener('click',function(){closePanel('sov','spanel');});
 document.getElementById('btn-about').addEventListener('click',function(){openPanel('aov','apanel');});
+
+/* ============================================================
+   PDF EXPORT — lazy-loads pdf-export.js (jsPDF + fonts + QR/logo,
+   ~900KB) only the first time this button is actually clicked, so
+   a normal visit to browse/search songs never pays that cost.
+   Netlify serves pdf-export.js as a sibling file alongside this
+   HTML and songs.json — no CDN involved.
+   ============================================================ */
+var EXPORT_ICON_DEFAULT = '<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7,10 12,15 17,10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
+var EXPORT_ICON_LOADING = '<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>';
+var pdfModuleLoaded = false;
+var pdfModuleLoading = false;
+
+function loadPdfExportModule(onReady, onError){
+  if (pdfModuleLoaded) { onReady(); return; }
+  if (pdfModuleLoading) { return; } // a load is already in flight; ignore repeat clicks
+  pdfModuleLoading = true;
+  var s = document.createElement('script');
+  s.src = 'pdf-export.js';
+  s.onload = function(){ pdfModuleLoading = false; pdfModuleLoaded = true; onReady(); };
+  s.onerror = function(){ pdfModuleLoading = false; onError(); };
+  document.head.appendChild(s);
+}
+
+document.getElementById('btn-export-pdf').addEventListener('click', function(){
+  var btn = document.getElementById('btn-export-pdf');
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.innerHTML = EXPORT_ICON_LOADING;
+  btn.classList.add('spin');
+
+  function finish(){
+    btn.disabled = false;
+    btn.innerHTML = EXPORT_ICON_DEFAULT;
+    btn.classList.remove('spin');
+  }
+
+  loadPdfExportModule(function(){
+    // setTimeout lets the browser repaint the loading state before the
+    // (synchronous, potentially ~1-2s for a full songbook) PDF build runs.
+    setTimeout(function(){
+      try {
+        window.UCN_generateSongbookPDF(SONGS);
+      } catch (e) {
+        alert('Could not generate the PDF: ' + e.message);
+      }
+      finish();
+    }, 30);
+  }, function(){
+    alert('Could not load the PDF export module. Make sure pdf-export.js is deployed alongside this file on Netlify.');
+    finish();
+  });
+});
 document.getElementById('aov').addEventListener('click',function(){closePanel('aov','apanel');});
 document.getElementById('btn-back').addEventListener('click',showList);
 document.getElementById('btn-rand').addEventListener('click',randomSong);
