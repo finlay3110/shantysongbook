@@ -1,19 +1,8 @@
 /* ============================================================
    UCN SONGBOOK — PDF EXPORT MODULE
-   ============================================================
-   This file is loaded LAZILY by index.html — only the first time
-   someone actually clicks the "Export PDF" button — so the ~1MB
-   of embedded jsPDF + fonts + QR/logo assets never slows down a
-   normal visit to read/search songs.
-
-   Contains, in order:
-     1. jsPDF v4.2.1 (MIT licensed, https://github.com/MrRio/jsPDF)
-        embedded directly — no CDN dependency at runtime.
-     2. The UCN songbook PDF-layout logic (buildSongbookPDF).
-     3. Embedded base64 assets: UCN logo, QR code linking to the
-        digital songbook, and Exo 2 / Orbitron font files.
-     4. window.UCN_generateSongbookPDF(songs) — the function
-        index.html calls once this file has finished loading.
+   Lazily loaded by index.html only when the export button is
+   clicked. Contains jsPDF (MIT licensed, embedded, no CDN),
+   the songbook layout logic, and embedded font/image assets.
    ============================================================ */
 
 /* ---- 1. jsPDF library ---- */
@@ -430,7 +419,8 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     muted:     [100, 108, 122],
     faint:     [150, 158, 170],
     border:    [205, 210, 220],
-    choruseBg: [253, 240, 227]   // light warm tint behind chorus blocks
+    choruseBg: [253, 240, 227],  // light warm tint behind chorus blocks
+    headingTint: [234, 238, 246] // very light navy tint band behind section headings
   };
 
   var CATEGORY_ORDER = [
@@ -438,6 +428,13 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     'Songs About Us','Fragments and Works in Progress','Traditional Songs',
     'Movie/TV','Improvised Songs','Folk & Other'
   ];
+
+  // Short 3-4 letter tags used on the small song-page corner mark
+  var CATEGORY_TAG = {
+    'Patriotic Songs': 'PAT', 'Bar/Drinking Songs': 'BAR', 'Crew Ballads': 'CREW',
+    'Accompanied Songs': 'ACC', 'Songs About Us': 'US', 'Fragments and Works in Progress': 'FRAG',
+    'Traditional Songs': 'TRAD', 'Movie/TV': 'FILM', 'Improvised Songs': 'IMPR', 'Folk & Other': 'FOLK'
+  };
 
   function buildSongbookPDF(jsPDFCtor, songs, assets){
     songs = songs || [];
@@ -466,16 +463,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         var orbitronOK = registered['Orbitron'] && registered['Orbitron'].indexOf('bold') > -1;
 
         if (exoOK && orbitronOK) {
-          // jsPDF registers a font's NAME optimistically at addFont() time, but only
-          // actually parses the underlying font-file bytes lazily, the first time
-          // that font is used to measure/draw text. A broken font can therefore
-          // "succeed" at registration and still crash later, unprotected, the first
-          // time real content tries to use it. Forcing that lazy parse to happen
-          // right here — still inside this try/catch — catches it safely instead.
           doc.setFont('Exo2', 'normal'); doc.getTextWidth('Test');
           doc.setFont('Exo2', 'bold');   doc.getTextWidth('Test');
           doc.setFont('Orbitron', 'bold'); doc.getTextWidth('Test');
-          doc.setFont('helvetica', 'normal'); // reset to a safe default before real content begins
+          doc.setFont('helvetica', 'normal');
           fontsOK = true;
         }
       }
@@ -496,6 +487,107 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       doc.setTextColor.apply(doc, color || COLOR.navy);
     }
 
+    // ============================================================
+    // CATEGORY ICONS — small vector line-icons echoing the app's
+    // SVG icon set, drawn with jsPDF's own shape primitives so they
+    // render identically regardless of viewer/device.
+    // ============================================================
+    function starPoints(cx, cy, rOuter, rInner){
+      var pts = [];
+      for (var i = 0; i < 10; i++){
+        var r = (i % 2 === 0) ? rOuter : rInner;
+        var ang = -Math.PI / 2 + i * Math.PI / 5;
+        pts.push([cx + r * Math.cos(ang), cy + r * Math.sin(ang)]);
+      }
+      return pts;
+    }
+    function drawPolygon(points, color, style){
+      style = style || 'S';
+      if (style === 'F') doc.setFillColor.apply(doc, color); else doc.setDrawColor.apply(doc, color);
+      var lines = [];
+      for (var i = 1; i < points.length; i++){
+        lines.push([points[i][0] - points[i-1][0], points[i][1] - points[i-1][1]]);
+      }
+      doc.lines(lines, points[0][0], points[0][1], [1,1], style, true);
+    }
+
+    function drawCategoryIcon(category, cx, cy, s, color){
+      color = color || COLOR.accent;
+      doc.setDrawColor.apply(doc, color);
+      doc.setFillColor.apply(doc, color);
+      doc.setLineWidth(Math.max(0.8, s * 0.09));
+      var h = s / 2;
+
+      switch (category){
+        case 'Patriotic Songs':
+          doc.line(cx - h * 0.6, cy - h, cx - h * 0.6, cy + h);
+          doc.triangle(cx - h * 0.6, cy - h, cx + h * 0.7, cy - h * 0.45, cx - h * 0.6, cy + h * 0.1, 'F');
+          break;
+        case 'Bar/Drinking Songs':
+          doc.roundedRect(cx - h * 0.7, cy - h * 0.7, h * 1.1, h * 1.5, 1, 1);
+          doc.ellipse(cx + h * 0.55, cy - h * 0.05, h * 0.35, h * 0.45);
+          break;
+        case 'Crew Ballads':
+          doc.ellipse(cx, cy - h * 0.55, h * 0.85, h * 0.3);
+          doc.line(cx - h * 0.85, cy - h * 0.55, cx - h * 0.85, cy + h * 0.55);
+          doc.line(cx + h * 0.85, cy - h * 0.55, cx + h * 0.85, cy + h * 0.55);
+          doc.lines([[h*1.7,0]], cx - h*0.85, cy + h*0.55, [1,1], 'S', false);
+          break;
+        case 'Accompanied Songs':
+          doc.circle(cx - h * 0.45, cy + h * 0.55, h * 0.32, 'F');
+          doc.circle(cx + h * 0.5, cy + h * 0.25, h * 0.32, 'F');
+          doc.line(cx - h * 0.15, cy + h * 0.55, cx - h * 0.15, cy - h * 0.75);
+          doc.line(cx - h * 0.15, cy - h * 0.75, cx + h * 0.82, cy - h * 0.4);
+          doc.line(cx + h * 0.82, cy - h * 0.4, cx + h * 0.82, cy + h * 0.25);
+          break;
+        case 'Songs About Us':
+          drawPolygon(starPoints(cx, cy, h * 0.95, h * 0.4), color, 'S');
+          break;
+        case 'Fragments and Works in Progress':
+          doc.rect(cx - h * 0.7, cy - h * 0.85, h * 1.25, h * 1.7);
+          doc.line(cx - h * 0.4, cy - h * 0.25, cx + h * 0.25, cy - h * 0.25);
+          doc.line(cx - h * 0.4, cy + h * 0.15, cx + h * 0.25, cy + h * 0.15);
+          break;
+        case 'Traditional Songs':
+          doc.circle(cx, cy - h * 0.75, h * 0.28);
+          doc.line(cx, cy - h * 0.45, cx, cy + h * 0.75);
+          doc.line(cx - h * 0.7, cy + h * 0.15, cx + h * 0.7, cy + h * 0.15);
+          doc.lines([[h*0.55,h*0.55],[h*0.25,-h*0.15]], cx - h*0.7, cy + h*0.15, [1,1], 'S', false);
+          doc.lines([[-h*0.55,h*0.55],[-h*0.25,-h*0.15]], cx + h*0.7, cy + h*0.15, [1,1], 'S', false);
+          break;
+        case 'Movie/TV':
+          doc.rect(cx - h * 0.85, cy - h * 0.15, h * 1.7, h * 1.0);
+          doc.line(cx - h * 0.85, cy - h * 0.55, cx + h * 0.85, cy - h * 0.15);
+          doc.line(cx - h * 0.4, cy - h * 0.55, cx - h * 0.15, cy - h * 0.15);
+          doc.line(cx + h * 0.2, cy - h * 0.55, cx + h * 0.45, cy - h * 0.15);
+          break;
+        case 'Improvised Songs':
+          doc.line(cx, cy - h, cx, cy + h);
+          doc.line(cx - h, cy, cx + h, cy);
+          doc.line(cx - h * 0.7, cy - h * 0.7, cx + h * 0.7, cy + h * 0.7);
+          doc.line(cx - h * 0.7, cy + h * 0.7, cx + h * 0.7, cy - h * 0.7);
+          doc.circle(cx, cy, h * 0.18, 'F');
+          break;
+        case 'Folk & Other':
+          doc.circle(cx - h * 0.15, cy + h * 0.45, h * 0.55);
+          doc.line(cx + h * 0.3, cy, cx + h * 0.85, cy - h * 0.9);
+          break;
+        default:
+          doc.circle(cx - h * 0.3, cy + h * 0.5, h * 0.3, 'F');
+          doc.line(cx, cy + h * 0.5, cx, cy - h * 0.7);
+      }
+    }
+
+    // Tiny music-note glyph used in the chorus box corner
+    function drawTinyNote(cx, cy, s, color){
+      doc.setDrawColor.apply(doc, color);
+      doc.setFillColor.apply(doc, color);
+      doc.setLineWidth(0.7);
+      doc.circle(cx - s * 0.3, cy + s * 0.35, s * 0.22, 'F');
+      doc.line(cx, cy + s * 0.35, cx, cy - s * 0.5);
+      doc.line(cx, cy - s * 0.5, cx + s * 0.55, cy - s * 0.25);
+    }
+
     // ---- Corner frame: thin border + accent corner marks, drawn on EVERY page ----
     function drawFrame(){
       var x0 = FRAME_INSET, y0 = FRAME_INSET;
@@ -507,23 +599,44 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       var legLen = 16;
       doc.setDrawColor.apply(doc, COLOR.accent);
       doc.setLineWidth(1.4);
-      // top-left
       doc.line(x0, y0 + legLen, x0, y0); doc.line(x0, y0, x0 + legLen, y0);
-      // top-right
       doc.line(x1 - legLen, y0, x1, y0); doc.line(x1, y0, x1, y0 + legLen);
-      // bottom-left
       doc.line(x0, y1 - legLen, x0, y1); doc.line(x0, y1, x0 + legLen, y1);
-      // bottom-right
       doc.line(x1 - legLen, y1, x1, y1); doc.line(x1, y1, x1, y1 - legLen);
     }
 
-    function newPage(){
-      doc.addPage();
-      drawFrame();
-      return CONTENT_TOP;
+    // ---- Running header: category name (content pages) or doc title (front matter) ----
+    function drawHeader(label){
+      if (!label) return;
+      setBody(8, 'normal', COLOR.faint);
+      doc.text(label.toUpperCase(), PAGE_W - FRAME_INSET - 14, FRAME_INSET + 22, { align: 'right', charSpace: 0.4 });
+      doc.setDrawColor.apply(doc, COLOR.border);
+      doc.setLineWidth(0.5);
+      doc.line(MARGIN, FRAME_INSET + 28, PAGE_W - MARGIN, FRAME_INSET + 28);
     }
 
-    // Draw frame on the first page (created implicitly by `new jsPDF()`, so no addPage() event fires for it)
+    // ---- Small corner tab on song pages showing which category they belong to ----
+    function drawCornerTag(category){
+      var tag = CATEGORY_TAG[category] || category.slice(0, 4).toUpperCase();
+      setBody(7, 'bold', [255, 255, 255]);
+      var tw = doc.getTextWidth(tag);
+      var tabW = tw + 14, tabH = 15;
+      var tx = PAGE_W - FRAME_INSET - tabW, ty = FRAME_INSET;
+      doc.setFillColor.apply(doc, COLOR.accent);
+      doc.rect(tx, ty, tabW, tabH, 'F');
+      doc.text(tag, tx + tabW / 2, ty + tabH - 4.5, { align: 'center' });
+    }
+
+    var currentHeaderLabel = null;
+
+    function newPage(headerLabel){
+      doc.addPage();
+      drawFrame();
+      if (headerLabel !== undefined) currentHeaderLabel = headerLabel;
+      drawHeader(currentHeaderLabel);
+      return CONTENT_TOP + (currentHeaderLabel ? 14 : 0);
+    }
+
     drawFrame();
 
     // ============================================================
@@ -578,10 +691,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     })();
 
     // ============================================================
-    // PAGE 2 — TABLE OF CONTENTS (placeholder; filled in at the end
-    // once every section's real starting page number is known)
+    // PAGE 2 — TABLE OF CONTENTS (placeholder)
     // ============================================================
-    newPage();
+    newPage('UCN Songbook');
     var TOC_PAGE = doc.internal.getNumberOfPages();
 
     var tocEntries = [];
@@ -590,10 +702,10 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     // PAGE 3 — CREDITS & DISCLAIMER
     // ============================================================
     (function drawCredits(){
-      var y = newPage();
-      tocEntries.push({ title: 'Credits & Disclaimer', page: doc.internal.getNumberOfPages() });
+      var y = newPage('UCN Songbook');
+      tocEntries.push({ title: 'Credits & Disclaimer', page: doc.internal.getNumberOfPages(), category: null });
 
-      y = drawSectionHeading('Credits & Disclaimer', y);
+      y = drawSectionHeading('Credits & Disclaimer', y, null);
 
       function block(label, body){
         setBody(9, 'bold', COLOR.muted);
@@ -632,18 +744,64 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       });
     })();
 
-    // ---- Shared: draw an uppercase section heading with underline rule ----
-    function drawSectionHeading(title, y){
-      setHead(20, COLOR.navy);
-      doc.text(title.toUpperCase(), MARGIN, y);
-      y += 8;
+    // ---- Shared: draw a section heading with tint band, icon, and underline rule ----
+    // (still used for Credits & Disclaimer and the Table of Contents title, which
+    // share a page with their own body content rather than getting a full divider)
+    function drawSectionHeading(title, y, category){
+      var bandH = 46;
+      doc.setFillColor.apply(doc, COLOR.headingTint);
+      doc.rect(MARGIN - 4, y - 30, CONTENT_W + 8, bandH, 'F');
+
+      var textX = MARGIN;
+      if (category) {
+        drawCategoryIcon(category, MARGIN + 12, y - 6, 22, COLOR.navy);
+        textX = MARGIN + 30;
+      }
+
+      setHead(19, COLOR.navy);
+      doc.text(title.toUpperCase(), textX, y);
+      y += 10;
       doc.setDrawColor.apply(doc, COLOR.accent);
       doc.setLineWidth(2);
       doc.line(MARGIN, y, MARGIN + 90, y);
-      return y + 28;
+      return y + 30;
     }
 
-    // ---- Ensure enough vertical room remains; otherwise start a new (plain) page ----
+    // ---- A dedicated divider/cover page for each section: UCN logo, category
+    // icon, and section title as their own standalone page, before that
+    // section's first song. Mirrors the main cover's layout at a smaller scale. ----
+    function drawSectionCoverPage(category, songCount){
+      var cx = PAGE_W / 2;
+      var y = 260;
+
+      if (assets.logoBase64) {
+        var logoW = 70, logoH = 70;
+        try {
+          doc.addImage(assets.logoBase64, 'PNG', cx - logoW / 2, y, logoW, logoH);
+        } catch (e) { /* image failed to decode — continue without it */ }
+        y += logoH + 26;
+      }
+
+      doc.setDrawColor.apply(doc, COLOR.navy);
+      doc.setLineWidth(1);
+      doc.line(cx - 120, y, cx + 120, y);
+      y += 40;
+
+      drawCategoryIcon(category, cx, y - 6, 30, COLOR.accent);
+      y += 30;
+
+      setHead(26, COLOR.navy);
+      doc.text(category.toUpperCase(), cx, y, { align: 'center' });
+      y += 24;
+
+      doc.setDrawColor.apply(doc, COLOR.navy);
+      doc.line(cx - 120, y, cx + 120, y);
+      y += 20;
+
+      setBody(9.5, 'normal', COLOR.faint);
+      doc.text(String(songCount) + (songCount === 1 ? ' song' : ' songs'), cx, y, { align: 'center' });
+    }
+
     function ensureRoom(y, needed){
       if (y + needed > CONTENT_BOTTOM) {
         return newPage();
@@ -651,7 +809,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return y;
     }
 
-    // ---- Render one song's lyrics using the same parsing rules as the app ----
     function drawLyrics(song, y){
       var blocks = song.lyrics.split('\n\n');
       var chorusLines = null;
@@ -662,7 +819,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         var first = (lines[0] || '').trim();
         if (!first) continue;
 
-        // [Section Label]
         if (/^\[.+\]$/.test(first) && lines.length <= 2) {
           y = ensureRoom(y, 16);
           setBody(9, 'bold', COLOR.accent);
@@ -671,7 +827,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           continue;
         }
 
-        // Repeat marker
         if (/^repeat /i.test(first) && lines.length <= 2) {
           y = ensureRoom(y, 16);
           setBody(9, 'normal', COLOR.faint);
@@ -680,7 +835,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           continue;
         }
 
-        // Chorus block
         if (/^(chorus[\s\d]*:?|\[chorus[\s\d]*\])/i.test(first)) {
           var content = lines.slice(1);
           if (!chorusLines) chorusLines = content;
@@ -688,7 +842,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
           continue;
         }
 
-        // Regular verse
         for (var li = 0; li < lines.length; li++) {
           y = ensureRoom(y, 14);
           setBody(10.5, 'normal', COLOR.text);
@@ -701,19 +854,21 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
 
     function drawChorusBox(lines, y){
-      var padX = 12, padY = 8, lineH = 14;
-      var boxH = padY * 2 + lines.length * lineH;
+      var padX = 14, padY = 10, lineH = 14;
+      var labelH = 14;
+      var boxH = padY * 2 + labelH + lines.length * lineH;
       y = ensureRoom(y, boxH + 10);
 
       doc.setFillColor.apply(doc, COLOR.choruseBg);
-      doc.setDrawColor.apply(doc, COLOR.orange);
-      doc.setLineWidth(0);
       doc.roundedRect(MARGIN, y, CONTENT_W, boxH, 3, 3, 'F');
-      // left accent bar
       doc.setFillColor.apply(doc, COLOR.orange);
       doc.rect(MARGIN, y, 3, boxH, 'F');
 
-      var ty = y + padY + 9;
+      drawTinyNote(MARGIN + padX + 5, y + padY + 6, 9, COLOR.orange);
+      setBody(7.5, 'bold', COLOR.orange);
+      doc.text('CHORUS', MARGIN + padX + 16, y + padY + 8);
+
+      var ty = y + padY + labelH + 8;
       setBody(10.5, 'normal', COLOR.text);
       for (var i = 0; i < lines.length; i++) {
         doc.text(lines[i] || ' ', MARGIN + padX + 4, ty);
@@ -723,29 +878,25 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
 
     // ============================================================
-    // SECTION PAGES — one per category, songs flow with page breaks
+    // SECTION PAGES
     // ============================================================
     var presentCategories = [];
     songs.forEach(function(s){
       if (presentCategories.indexOf(s.category) === -1) presentCategories.push(s.category);
     });
-    // Prefer the canonical order; append any unexpected/future categories at the end
     var orderedCategories = CATEGORY_ORDER.filter(function(c){ return presentCategories.indexOf(c) > -1; });
     presentCategories.forEach(function(c){ if (orderedCategories.indexOf(c) === -1) orderedCategories.push(c); });
 
     orderedCategories.forEach(function(category){
-      var y = newPage();
-      tocEntries.push({ title: category, page: doc.internal.getNumberOfPages() });
-      y = drawSectionHeading(category, y);
-
       var catSongs = songs.filter(function(s){ return s.category === category; });
 
-      catSongs.forEach(function(song, idx){
-        if (idx > 0) {
-          y = newPage(); // every song after the section's first gets its own fresh page
-        } else {
-          y = ensureRoom(y, 60); // first song shares the section-heading page if room allows
-        }
+      newPage(category);
+      tocEntries.push({ title: category, page: doc.internal.getNumberOfPages(), category: category });
+      drawSectionCoverPage(category, catSongs.length);
+
+      catSongs.forEach(function(song){
+        var y = newPage(category);
+        drawCornerTag(category);
 
         setBody(13, 'bold', COLOR.navy);
         doc.text(song.title, MARGIN, y);
@@ -758,12 +909,12 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         y += 10;
 
         y = drawLyrics(song, y);
-        y += 14; // gap before next song (only relevant if a future layout ever shares pages again)
+        y += 14;
       });
     });
 
     // ============================================================
-    // FOOTER — "Page X of Y" on every page except the cover
+    // FOOTER
     // ============================================================
     var totalPages = doc.internal.getNumberOfPages();
     for (var p = 2; p <= totalPages; p++) {
@@ -773,26 +924,30 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
     }
 
     // ============================================================
-    // GO BACK AND FILL IN THE TABLE OF CONTENTS
-    // (page numbers were only known once every section was built)
+    // FILL IN THE TABLE OF CONTENTS
     // ============================================================
     doc.setPage(TOC_PAGE);
-    var ty = drawSectionHeading('Table of Contents', CONTENT_TOP);
+    var ty = drawSectionHeading('Table of Contents', CONTENT_TOP + 14, null);
 
     tocEntries.forEach(function(entry){
-      ty = ensureRoomTOC(ty, 22);
+      ty = ensureRoomTOC(ty, 24);
 
-      setBody(11, 'normal', COLOR.text);
-      doc.text(entry.title, MARGIN, ty);
+      var textX = MARGIN;
+      if (entry.category) {
+        drawCategoryIcon(entry.category, MARGIN + 8, ty - 5, 15, COLOR.accent);
+        textX = MARGIN + 22;
+      }
+
+      setBody(11, 'bold', COLOR.text);
+      doc.text(entry.title, textX, ty);
 
       var titleW = doc.getTextWidth(entry.title);
       var pageStr = String(entry.page);
-      setBody(11, 'bold', COLOR.navy);
+      setBody(11, 'bold', COLOR.accent);
       var pageStrW = doc.getTextWidth(pageStr);
       doc.text(pageStr, PAGE_W - MARGIN, ty, { align: 'right' });
 
-      // Dotted leader line between the title and the page number
-      var leaderX0 = MARGIN + titleW + 6;
+      var leaderX0 = textX + titleW + 6;
       var leaderX1 = PAGE_W - MARGIN - pageStrW - 6;
       if (leaderX1 > leaderX0) {
         doc.setDrawColor.apply(doc, COLOR.border);
@@ -802,22 +957,17 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
         doc.setLineDashPattern([], 0);
       }
 
-      // Real clickable link over the whole row -> jumps to that section's page
-      doc.link(MARGIN, ty - 12, CONTENT_W, 18, { pageNumber: entry.page });
+      doc.link(MARGIN, ty - 13, CONTENT_W, 20, { pageNumber: entry.page });
 
-      ty += 22;
+      ty += 24;
     });
 
     function ensureRoomTOC(y, needed){
-      // NOTE: with ~10-11 sections this always fits on one page; if the
-      // songbook grows enough categories to overflow this page, a second
-      // TOC page would need inserting BEFORE section pages are built
-      // (inserting one now would shift every recorded page number).
       if (y + needed > CONTENT_BOTTOM) { return CONTENT_BOTTOM; }
       return y;
     }
 
-    doc.setPage(totalPages); // leave the doc "pointing" at the last page
+    doc.setPage(totalPages);
     return doc;
   }
 
@@ -827,10 +977,6 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
 /* ============================================================
    UCN SONGBOOK — PDF EXPORT ENTRY POINT
-   This is the function the main app calls after this file has
-   been lazily loaded. It assembles the embedded assets and hands
-   everything to buildSongbookPDF() (defined above), then triggers
-   the browser download.
    ============================================================ */
 window.UCN_generateSongbookPDF = function(songs){
   var assets = {
