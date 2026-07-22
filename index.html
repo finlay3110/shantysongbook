@@ -47,6 +47,8 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
 .cats::-webkit-scrollbar{display:none;}
 .cpill{flex-shrink:0;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
 .cpill.active{background:var(--accent);border-color:var(--accent);color:#0E1626;}
+.cpill.fav-pill:not(.active){color:var(--star);border-color:rgba(227,154,62,0.35);}
+.cpill.fav-pill.active{background:var(--star);border-color:var(--star);color:#1a1200;}
 .cpill:not(.active):hover{border-color:var(--accent);color:var(--accent);}
 .lmeta{padding:0 16px 6px;color:var(--text-dim);font-size:.75rem;flex-shrink:0;}
 .slist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(100px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
@@ -67,6 +69,7 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
 .load-error{text-align:center;padding:40px 16px;color:var(--text-muted);}
 .load-error .err-icon{font-size:2.5rem;margin-bottom:12px;}
 .load-error code{display:block;margin-top:8px;font-size:.75rem;color:var(--text-dim);background:var(--surface2);padding:6px 10px;border-radius:6px;}
+.offline-banner{margin:0 16px 8px;background:rgba(227,154,62,0.1);border:1px solid rgba(227,154,62,0.3);color:var(--star);font-size:.75rem;padding:8px 12px;border-radius:8px;}
 #detail-view{display:none;flex-direction:column;flex:1;overflow:hidden;}#detail-view.vis{display:flex;}
 .dbar{padding:0 8px;height:48px;display:flex;align-items:center;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
 .bbtn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;padding:8px;border-radius:8px;}
@@ -228,7 +231,7 @@ function saveState(){try{localStorage.setItem('ucn_s',JSON.stringify({f:state.fa
 
 /* Helpers */
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function filteredSongs(){var q=state.query.toLowerCase();return SONGS.filter(function(s){if(state.category!=='All'&&s.category!==state.category)return false;if(!q)return true;return s.title.toLowerCase().indexOf(q)>-1||(s.tune&&s.tune.toLowerCase().indexOf(q)>-1)||(s.words&&s.words.toLowerCase().indexOf(q)>-1);});}
+function filteredSongs(){var q=state.query.toLowerCase();return SONGS.filter(function(s){if(state.category==='Favourites'){if(state.favourites.indexOf(s.id)===-1)return false;}else if(state.category!=='All'&&s.category!==state.category){return false;}if(!q)return true;return s.title.toLowerCase().indexOf(q)>-1||(s.tune&&s.tune.toLowerCase().indexOf(q)>-1)||(s.words&&s.words.toLowerCase().indexOf(q)>-1);});}
 
 /* Lyric rendering */
 function chorusBlockHtml(lines){var hl=state.highlightChorus;var html='<div class="lyric-chorus'+(hl?'':' no-highlight')+'"><div class="chorus-label">\u266A Chorus</div>';html+=lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('');return html+'</div>';}
@@ -238,17 +241,32 @@ function renderLyrics(lyrics){var blocks=lyrics.split('\n\n'),html='',chorusLine
 function renderList(){
   var songs=filteredSongs(),el=document.getElementById('song-list'),meta=document.getElementById('list-meta');
   meta.textContent=songs.length===SONGS.length?SONGS.length+' songs':songs.length+' of '+SONGS.length+' songs';
-  if(!songs.length){el.innerHTML='<div class="no-res"><div class="nr-icon">\uD83D\uDD2D</div><div>No songs found</div></div>';return;}
+  if(!songs.length){
+    if(state.category==='Favourites'){
+      el.innerHTML='<div class="no-res"><div class="nr-icon">\u2606</div><div>No favourites yet</div><div style="font-size:.8rem;margin-top:6px;color:var(--text-dim);">Tap the star on any song to add it here</div></div>';
+    } else {
+      el.innerHTML='<div class="no-res"><div class="nr-icon">\uD83D\uDD2D</div><div>No songs found</div></div>';
+    }
+    return;
+  }
   var html='';
   for(var i=0;i<songs.length;i++){var s=songs[i],isFav=state.favourites.indexOf(s.id)>-1,icon=CAT_ICONS[s.category]||'\u266A';html+='<div class="song-card'+(isFav?' fav':'')+'" data-id="'+s.id+'"><div class="ci">'+icon+'</div><div class="cb"><div class="ct">'+esc(s.title);if(s.category==='Traditional Songs')html+='<span class="trad-badge">trad</span>';html+='</div><div class="cs">\uD83C\uDFB5 '+esc(s.tune)+'</div>';if(s.source_book)html+='<div class="cp">\uD83D\uDCD6 '+esc(s.source_book)+', p.'+s.source_page+'</div>';html+='</div><button class="cstar'+(isFav?' active':'')+'" data-fav="'+s.id+'">'+(isFav?'\u2605':'\u2606')+'</button></div>';}
   el.innerHTML=html;
 }
 
-/* Categories — computed from SONGS each time so new categories appear automatically */
+/* Categories — computed from SONGS each time so new categories appear automatically.
+   'Favourites' is a pseudo-category (not a real song category) inserted after 'All'
+   so people can jump straight to their starred songs. */
 function renderCategories(){
-  var cats=['All',...new Set(SONGS.map(function(s){return s.category;}))];
+  var cats=['All','Favourites',...new Set(SONGS.map(function(s){return s.category;}))];
   var el=document.getElementById('cat-tabs'),html='';
-  for(var i=0;i<cats.length;i++){var c=cats[i],label=c==='All'?'All':((CAT_ICONS[c]||'')+' '+c.split('/')[0].replace(' Songs','').replace(' Ballads','').replace(' in Progress','').trim());html+='<button class="cpill'+(state.category===c?' active':'')+'" data-cat="'+esc(c)+'">'+label.trim()+'</button>';}
+  for(var i=0;i<cats.length;i++){
+    var c=cats[i],label;
+    if(c==='All') label='All';
+    else if(c==='Favourites') label='\u2605 Favourites';
+    else label=(CAT_ICONS[c]||'')+' '+c.split('/')[0].replace(' Songs','').replace(' Ballads','').replace(' in Progress','').trim();
+    html+='<button class="cpill'+(state.category===c?' active':'')+(c==='Favourites'?' fav-pill':'')+'" data-cat="'+esc(c)+'">'+label.trim()+'</button>';
+  }
   el.innerHTML=html;
 }
 
@@ -308,12 +326,31 @@ document.getElementById('song-list').addEventListener('click',function(e){var fa
 
 /* ============================================================
    BOOT — fetch songs.json then start the app.
-   Shows a loading spinner while waiting, and a clear error
-   message if the fetch fails (e.g. songs.json is missing).
+   Shows a loading spinner while waiting. On success, the songs
+   are also cached to localStorage so the app still works if a
+   later visit happens with no signal (e.g. at a LARP event) —
+   it falls back to the last successfully loaded copy and shows
+   a small offline banner instead of a blank error screen.
    ============================================================ */
 (function loadSongs(){
   var listEl = document.getElementById('song-list');
   var metaEl = document.getElementById('list-meta');
+  var CACHE_KEY = 'ucn_songs_cache';
+  var CACHE_TIME_KEY = 'ucn_songs_cache_time';
+
+  function useSongs(data, fromCache){
+    SONGS = data;
+    renderCategories();
+    renderList();
+    if(fromCache){
+      var when = localStorage.getItem(CACHE_TIME_KEY);
+      var whenText = when ? new Date(+when).toLocaleDateString() : 'a previous visit';
+      var banner = document.createElement('div');
+      banner.className = 'offline-banner';
+      banner.textContent = '\u26A0\uFE0F Offline — showing songs saved from ' + whenText;
+      listEl.parentNode.insertBefore(banner, listEl);
+    }
+  }
 
   /* Loading state */
   metaEl.textContent = '';
@@ -325,11 +362,23 @@ document.getElementById('song-list').addEventListener('click',function(e){var fa
       return r.json();
     })
     .then(function(data){
-      SONGS = data;
-      renderCategories();
-      renderList();
+      /* Successful fetch — cache it for offline fallback next time */
+      try{
+        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+      }catch(e){}
+      useSongs(data, false);
     })
     .catch(function(err){
+      /* Fetch failed — try the cached copy before giving up */
+      var cached = null;
+      try{ cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }catch(e){}
+
+      if(cached && cached.length){
+        useSongs(cached, true);
+        return;
+      }
+
       metaEl.textContent = '';
       listEl.innerHTML =
         '<div class="load-error">' +
