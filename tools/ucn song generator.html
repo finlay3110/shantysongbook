@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UCN Song Entry Generator</title>
+<style>
+:root{
+  --bg:#0d1117;--surface:#1a1f26;--surface2:#242a35;--border:#30363d;
+  --accent:#00b4d8;--text:#e2e8f0;--text-muted:#8892a4;--text-dim:#58626e;
+  --chorus:#f59e0b;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;font-size:15px;padding:20px;min-height:100vh;}
+
+h1{font-size:1.2rem;font-weight:700;color:var(--accent);margin-bottom:4px;}
+.subtitle{font-size:.8rem;color:var(--text-muted);margin-bottom:24px;}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:16px;}
+.card-title{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:12px;}
+
+.field{margin-bottom:12px;}
+label{display:block;font-size:.8rem;color:var(--text-muted);margin-bottom:5px;}
+input,select,textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:.9rem;font-family:inherit;outline:none;transition:border-color .2s;}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);}
+select option{background:var(--surface2);}
+textarea{resize:vertical;line-height:1.6;}
+
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row-id{display:grid;grid-template-columns:100px 1fr;gap:12px;}
+
+.hint{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:12px;font-size:.78rem;color:var(--text-muted);line-height:1.6;}
+.hint strong{color:var(--text);}
+code{background:var(--bg);padding:1px 5px;border-radius:4px;font-size:.75rem;border:1px solid var(--border);}
+
+.output-wrap{position:relative;}
+.output{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:monospace;font-size:.78rem;line-height:1.6;white-space:pre-wrap;word-break:break-all;color:var(--text);min-height:80px;max-height:320px;overflow-y:auto;}
+
+.btn-row{display:flex;gap:10px;margin-top:12px;}
+button{padding:10px 18px;border-radius:8px;border:none;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;}
+.btn-copy{background:var(--accent);color:#fff;flex:1;}
+.btn-copy:hover{opacity:.9;}
+.btn-copy.copied{background:#22c55e;}
+.btn-clear{background:var(--surface2);color:var(--text-muted);border:1px solid var(--border);}
+.btn-clear:hover{color:var(--text);}
+
+.confirm{font-size:.8rem;color:#22c55e;text-align:center;height:20px;margin-top:8px;}
+
+.hdr{display:flex;align-items:center;gap:10px;margin-bottom:20px;}
+.hdr-logo{width:36px;height:36px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+  <div class="hdr-logo">🎵</div>
+  <div>
+    <h1>UCN Song Entry Generator</h1>
+    <div class="subtitle">Fill in the fields, then copy the output into the songbook HTML file.</div>
+  </div>
+</div>
+
+<!-- FIELDS -->
+<div class="card">
+  <div class="card-title">Song Details</div>
+
+  <div class="row-id">
+    <div class="field">
+      <label>Song ID <span style="color:var(--chorus)">*</span></label>
+      <input type="number" id="f-id" value="70" min="1">
+    </div>
+    <div class="field">
+      <label>Title <span style="color:var(--chorus)">*</span></label>
+      <input type="text" id="f-title" placeholder="e.g. The Cobalt Flag">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>Category <span style="color:var(--chorus)">*</span></label>
+    <select id="f-cat">
+      <option value="Patriotic Songs">Patriotic Songs</option>
+      <option value="Bar/Drinking Songs" selected>Bar/Drinking Songs</option>
+      <option value="Crew Ballads">Crew Ballads</option>
+      <option value="Accompanied Songs">Accompanied Songs</option>
+      <option value="Songs About Us">Songs About Us</option>
+      <option value="Fragments and Works in Progress">Fragments and Works in Progress</option>
+      <option value="Traditional Songs">Traditional Songs</option>
+      <option value="Movie/TV">Movie/TV</option>
+    </select>
+  </div>
+
+  <div class="row2">
+    <div class="field">
+      <label>Words / Author</label>
+      <input type="text" id="f-words" placeholder="e.g. Lt. Cmdr. Jim">
+    </div>
+    <div class="field">
+      <label>Tune</label>
+      <input type="text" id="f-tune" placeholder="e.g. Jerusalem; Hubert Parry">
+    </div>
+  </div>
+
+  <div class="row2">
+    <div class="field">
+      <label>Source Book</label>
+      <input type="text" id="f-book" placeholder="e.g. UCN Songbook">
+    </div>
+    <div class="field">
+      <label>Page Number</label>
+      <input type="number" id="f-page" placeholder="e.g. 12" min="1">
+    </div>
+  </div>
+</div>
+
+<!-- LYRICS -->
+<div class="card">
+  <div class="card-title">Lyrics</div>
+
+  <div class="hint">
+    <strong>Formatting rules:</strong><br>
+    Press <strong>Enter</strong> for a new line &nbsp;·&nbsp;
+    Leave a <strong>blank line</strong> between verses<br>
+    Start a chorus block with <code>Chorus:</code> on its own line<br>
+    Use <code>Repeat chorus</code> alone on a line for repeat markers<br>
+    Use <code>[Section Label]</code> alone on a line for named sections
+  </div>
+
+  <textarea id="f-lyrics" rows="14" placeholder="Type or paste lyrics here...
+
+Verse one line one
+Verse one line two
+
+Chorus:
+Chorus line one
+Chorus line two
+
+Second verse line one
+Second verse line two
+
+Repeat chorus"></textarea>
+</div>
+
+<!-- OUTPUT -->
+<div class="card">
+  <div class="card-title">Generated Output</div>
+  <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:10px;">
+    Paste this after the last <code>}</code> in the <code>SONGS</code> array inside the HTML file.
+  </p>
+
+  <div class="output-wrap">
+    <div class="output" id="output"></div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn-copy" id="btn-copy" onclick="copyOutput()">📋 Copy to Clipboard</button>
+    <button class="btn-clear" onclick="clearAll()">✕ Clear</button>
+  </div>
+  <div class="confirm" id="confirm"></div>
+</div>
+
+<script>
+function getVal(id){ return document.getElementById(id).value; }
+
+function buildOutput(){
+  var id    = parseInt(getVal('f-id')) || 70;
+  var title = getVal('f-title').trim() || 'Song Title';
+  var cat   = getVal('f-cat');
+  var words = getVal('f-words').trim() || 'Author Name';
+  var tune  = getVal('f-tune').trim()  || 'Tune; Composer';
+  var book  = getVal('f-book').trim();
+  var page  = parseInt(getVal('f-page')) || null;
+  var lyrics = getVal('f-lyrics');
+
+  /* Convert real newlines to \n escape sequences for JSON string */
+  var lyricsEsc = lyrics
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g,  '\\"')
+    .replace(/\r\n/g, '\\n')
+    .replace(/\r/g,   '\\n')
+    .replace(/\n/g,   '\\n');
+
+  var lines = [
+    ',{',
+    '  "id": '           + id             + ',',
+    '  "title": "'       + esc(title)     + '",',
+    '  "category": "'    + esc(cat)       + '",',
+    '  "words": "'       + esc(words)     + '",',
+    '  "tune": "'        + esc(tune)      + '",',
+    '  "lyrics": "'      + lyricsEsc      + '",'
+  ];
+
+  if(book && page){
+    lines.push('  "source_book": "' + esc(book) + '",');
+    lines.push('  "source_page": '  + page       + '');
+  } else if(book){
+    lines.push('  "source_book": "' + esc(book)  + '",');
+    lines.push('  "source_page": null');
+  } else {
+    /* Remove trailing comma from lyrics line and add nulls */
+    lines[lines.length-1] = lines[lines.length-1].replace(/,$/, '');
+    lines.push('  "source_book": null,');
+    lines.push('  "source_page": null');
+  }
+
+  lines.push('}');
+  return lines.join('\n');
+}
+
+function esc(s){
+  return String(s).replace(/\\/g,'\\\\').replace(/"/g,'\\"');
+}
+
+function update(){
+  document.getElementById('output').textContent = buildOutput();
+}
+
+function copyOutput(){
+  var text = buildOutput();
+  navigator.clipboard.writeText(text).then(function(){
+    var btn = document.getElementById('btn-copy');
+    var confirm = document.getElementById('confirm');
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    confirm.textContent = 'Paste after the last } in the SONGS array in the HTML file.';
+    setTimeout(function(){
+      btn.textContent = '📋 Copy to Clipboard';
+      btn.classList.remove('copied');
+      confirm.textContent = '';
+    }, 3000);
+  });
+}
+
+function clearAll(){
+  ['f-title','f-words','f-tune','f-book','f-lyrics'].forEach(function(id){
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('f-id').value   = '70';
+  document.getElementById('f-page').value = '';
+  document.getElementById('f-cat').value  = 'Bar/Drinking Songs';
+  update();
+}
+
+/* Live update on any input change */
+['f-id','f-title','f-cat','f-words','f-tune','f-book','f-page','f-lyrics'].forEach(function(id){
+  document.getElementById(id).addEventListener('input', update);
+});
+
+update();
+</script>
+</body>
+</html>
