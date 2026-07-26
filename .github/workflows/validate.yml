@@ -1,0 +1,32 @@
+name: Validate songbook
+
+# songs.json is edited by hand and deploys straight to Netlify on push,
+# so this runs the same checks a maintainer would forget to run.
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate songs.json
+        run: node tools/validate-songs.mjs
+
+      - name: Check the app's files are all present
+        run: |
+          missing=0
+          for f in index.html styles.css app.js lyrics.js songs.json sw.js \
+                   manifest.webmanifest pdf-export.js \
+                   fonts/exo2-latin.woff2 fonts/opendyslexic-latin-400-normal.woff2 \
+                   icons/icon-192.png icons/icon-512.png; do
+            if [ ! -f "$f" ]; then echo "missing: $f"; missing=1; fi
+          done
+          exit $missing

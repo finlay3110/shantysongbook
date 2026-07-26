@@ -2,190 +2,182 @@
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<!-- user-scalable=no / maximum-scale=1 were removed: they blocked pinch-zoom,
+     which is the one accessibility affordance every phone has, and sat oddly
+     next to the dyslexia font and text-size controls this app ships. -->
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>UCN Songbook</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<style>
-@font-face{font-family:'OpenDyslexic';src:url('https://cdn.jsdelivr.net/npm/opendyslexic@0.91413.1/regular/OpenDyslexic-Regular.otf') format('opentype');}
-:root{
-  --bg:#0E1626;--surface:#152238;--surface2:#1C2A46;--border:#2B3A52;
-  --accent:#4FA8C9;--accent-glow:rgba(79,168,201,0.2);
-  --chorus-bg:rgba(221,122,43,0.10);--chorus-border:#DD7A2B;
-  --text:#EAF0FB;--text-muted:#8C949E;--text-dim:#4E5A6A;
-  --star:#E39A3E;--hdr:#1B2A5E;--tag-bg:#1C3A52;--font-size:16px;
-}
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;font-size:var(--font-size);background:var(--bg);color:var(--text);}
-/* iOS Safari fix: 100vh doesn't account for the address bar showing/hiding,
-   which cuts off content and breaks scrolling near the bottom of the page.
-   --vh is set by JS to the true visible height; dvh is used as a modern fallback. */
-[data-font="exo"] *{font-family:'Exo 2',sans-serif!important;}
-[data-font="dyslexic"] *{font-family:'OpenDyslexic',sans-serif!important;letter-spacing:.05em;word-spacing:.1em;line-height:1.8!important;}
-#app{display:flex;flex-direction:column;height:100vh;height:calc(var(--vh,1vh) * 100);height:100dvh;}
-.hdr{background:var(--hdr);border-bottom:2px solid var(--accent);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10;}
-.hdr::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 15% 35%,rgba(255,255,255,.35) 0%,transparent 100%),radial-gradient(1px 1px at 40% 65%,rgba(255,255,255,.2) 0%,transparent 100%),radial-gradient(1px 1px at 72% 28%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 58% 52%,rgba(79,168,201,.5) 0%,transparent 100%);}
-.hdr-l{display:flex;align-items:center;gap:10px;z-index:1;}.hdr-r{display:flex;align-items:center;gap:6px;z-index:1;}
-.logo{height:38px;width:auto;}.site-title{font-size:1.05rem;font-weight:700;color:#EAF0FB;letter-spacing:.04em;}
-.ibtn{background:none;border:none;color:rgba(234,240,251,0.6);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.15rem;transition:color .2s,background .2s;}
-.ibtn:hover,.ibtn.active{color:var(--accent);background:rgba(79,168,201,0.12);}
-.portal-bar{background:rgba(27,42,94,0.6);border-bottom:1px solid var(--border);padding:6px 16px;flex-shrink:0;}
-.portal-link{display:inline-flex;align-items:center;gap:5px;color:var(--text-muted);font-size:.75rem;text-decoration:none;transition:color .2s;}
-.portal-link:hover{color:var(--accent);}
-.portal-link::before{content:'\2190';}
-#list-view{display:flex;flex-direction:column;flex:1;overflow:hidden;}
-.sw{padding:12px 16px 8px;flex-shrink:0;}
-.sb{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;transition:border-color .2s;}
-.sb:focus-within{border-color:var(--accent);}
-.si{color:var(--text-muted);font-size:1rem;}
-.sinp{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1rem;padding:10px 0;font-family:inherit;}
-.sinp::placeholder{color:var(--text-dim);}
-.xcbtn{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;display:none;align-items:center;font-size:.9rem;}
-.xcbtn.vis{display:flex;}
-.cw{padding:0 16px 8px;flex-shrink:0;}
-.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
-.cats::-webkit-scrollbar{display:none;}
-.cpill{flex-shrink:0;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:.8rem;font-weight:500;cursor:pointer;transition:all .2s;white-space:nowrap;}
-.cpill.active{background:var(--accent);border-color:var(--accent);color:#0E1626;}
-.cpill.fav-pill:not(.active){color:var(--star);border-color:rgba(227,154,62,0.35);}
-.cpill.fav-pill.active{background:var(--star);border-color:var(--star);color:#1a1200;}
-.cpill:not(.active):hover{border-color:var(--accent);color:var(--accent);}
-.lmeta-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px 6px;flex-shrink:0;}
-.lmeta{color:var(--text-dim);font-size:.75rem;}
-.clear-all-pill{display:none;align-items:center;gap:4px;background:none;border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;padding:3px 10px;border-radius:12px;cursor:pointer;white-space:nowrap;transition:all .2s;}
-.clear-all-pill.vis{display:inline-flex;}
-.clear-all-pill:hover{color:var(--accent);border-color:var(--accent);}
-.clear-all-pill svg{width:.85em;height:.85em;}
-.slist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(100px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-.slist::-webkit-scrollbar{width:4px;}.slist::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-.song-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;padding:12px 14px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .1s;display:flex;align-items:center;gap:12px;border-left:3px solid transparent;}
-.song-card:hover{border-left-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow);}
-.song-card:active{transform:scale(.98);}.song-card.fav{border-left-color:var(--star);}
-.ci{width:36px;height:36px;border-radius:8px;background:var(--tag-bg);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;color:var(--accent);}
-/* ── ICON SYSTEM ─────────────────────────────────────────────
-   Hand-built line-icon set (replaces emoji, which render
-   inconsistently across iOS/Android/desktop). Icons scale with
-   the font-size of whatever element contains them (width/height:1em),
-   so no per-instance sizing is needed — just drop them in text flow.
-   .icn-lg is for the few large centred icons (empty states, errors). */
-.icn{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;flex-shrink:0;}
-.icn-lg{width:2.4rem;height:2.4rem;vertical-align:middle;}
-.ibtn.spin .icn{animation:ibtn-spin 0.9s linear infinite;}
-@keyframes ibtn-spin{to{transform:rotate(360deg);}}
-@media (prefers-reduced-motion: reduce){.ibtn.spin .icn{animation:none;}}
-#btn-fav.active{color:var(--star)!important;background:rgba(227,154,62,0.12)!important;}
-.cb{flex:1;min-width:0;}.ct{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cs{font-size:.75rem;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cp{font-size:.7rem;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.cstar{color:var(--text-dim);font-size:1.2rem;flex-shrink:0;width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;margin:-8px;}
-.cstar.active{color:var(--star);}
-.no-res{text-align:center;padding:40px 16px;color:var(--text-muted);}.nr-icon{font-size:2.5rem;margin-bottom:12px;}
-.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--text-muted);}
-.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
-@keyframes spin{to{transform:rotate(360deg);}}
-.load-error{text-align:center;padding:40px 16px;color:var(--text-muted);}
-.load-error .err-icon{font-size:2.5rem;margin-bottom:12px;}
-.load-error code{display:block;margin-top:8px;font-size:.75rem;color:var(--text-dim);background:var(--surface2);padding:6px 10px;border-radius:6px;}
-.offline-banner{margin:0 16px 8px;background:rgba(227,154,62,0.1);border:1px solid rgba(227,154,62,0.3);color:var(--star);font-size:.75rem;padding:8px 12px;border-radius:8px;}
-#detail-view{display:none;flex-direction:column;flex:1;overflow:hidden;}#detail-view.vis{display:flex;}
-.dbar{padding:0 8px;height:48px;display:flex;align-items:center;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
-.bbtn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;padding:8px;border-radius:8px;}
-.bbtn:hover{background:rgba(79,168,201,0.1);}.dact{margin-left:auto;display:flex;gap:4px;}
-.sinfo{padding:16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
-.sinfo h1{font-size:1.2rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
-.ir{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:.8rem;color:var(--text-muted);}
-.ir.source{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;}
-.lw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px calc(120px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
-.lw::-webkit-scrollbar{width:4px;}.lw::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
-.lyric-block{margin-bottom:20px;}.lyric-block p,.lyric-chorus p{line-height:1.75;margin-bottom:1px;font-size:var(--font-size);}
-.lyric-chorus{background:var(--chorus-bg);border-left:3px solid var(--chorus-border);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:20px;}
-.lyric-chorus.no-highlight{background:none;border-left:none;padding-left:0;margin-bottom:20px;}
-.chorus-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--chorus-border);margin-bottom:6px;}
-.no-highlight .chorus-label{display:none;}
-.lyric-instruction{text-align:center;color:var(--text-dim);font-style:italic;font-size:.85rem;margin-bottom:16px;padding:4px;}
-.lyric-section-label{color:var(--accent);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:4px 0;}
-.trad-badge{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:rgba(79,168,201,0.15);color:var(--accent);border:1px solid rgba(79,168,201,0.3);margin-left:6px;vertical-align:middle;}
-.overlay{position:fixed;inset:0;background:rgba(5,10,20,.7);z-index:30;display:none;backdrop-filter:blur(3px);}
-.overlay.vis{display:block;}
-.panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;z-index:31;padding:18px 20px 24px;transform:translateY(100%);transition:transform .3s ease;overflow-y:auto;max-height:85vh;}
-.panel.vis{transform:translateY(0);}.sh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
-.stitle{font-size:1rem;font-weight:700;margin-bottom:14px;text-align:center;color:var(--accent);}
-.srow{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);}
-.srow:last-child{border-bottom:none;}.slabel{font-size:.9rem;color:var(--text);}
-.tog{position:relative;width:44px;height:24px;}.tog input{opacity:0;width:0;height:0;}
-.tslider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
-.tslider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
-.tog input:checked+.tslider{background:var(--accent);}.tog input:checked+.tslider::before{transform:translateX(20px);}
-.fbtns{display:flex;gap:8px;flex-wrap:wrap;}
-.fbtn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:all .2s;}
-.fbtn.active{border-color:var(--accent);color:var(--accent);background:rgba(79,168,201,0.1);}
-.szw{display:flex;align-items:center;gap:10px;}
-.szbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.szbtn:hover{border-color:var(--accent);color:var(--accent);}
-.szval{font-size:.85rem;color:var(--text-muted);min-width:32px;text-align:center;}
-.spw{display:flex;align-items:center;gap:8px;flex:1;}.spw input{flex:1;accent-color:var(--accent);}
-.spl{font-size:.8rem;color:var(--text-muted);}
-.about-section{padding:14px 0;border-bottom:1px solid var(--border);}.about-section:last-child{border-bottom:none;}
-.about-section h3{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:8px;}
-.about-section p{font-size:.85rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.about-section p:last-child{margin-bottom:0;}
-.about-logo{display:flex;justify-content:center;margin-bottom:14px;}.about-logo img{height:56px;width:auto;opacity:.9;}
-.disclaimer-box{background:rgba(221,122,43,0.08);border:1px solid rgba(221,122,43,0.25);border-radius:8px;padding:10px 12px;margin-top:4px;}
-.disclaimer-box p{font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.disclaimer-box p:last-child{margin-bottom:0;}
-@supports(padding-bottom:env(safe-area-inset-bottom)){.panel{padding-bottom:calc(40px + env(safe-area-inset-bottom));}}
-</style>
+<meta name="description" content="A fan-made digital songbook for the United Confederation Navy (UCN) Bridge Command LARP community. Browse, search and export the full songbook as a print-ready PDF.">
+<meta name="theme-color" content="#1B2A5E">
+<meta name="color-scheme" content="dark light">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Songbook">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<!-- Links to songs get pasted into Discord constantly; these give them a real embed. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="UCN Songbook">
+<meta property="og:title" content="UCN Songbook">
+<meta property="og:description" content="Browse, search and sing the UCN songbook — or export the whole thing as a print-ready PDF.">
+<meta property="og:url" content="https://shantysongbook.netlify.app/">
+<meta property="og:image" content="https://shantysongbook.netlify.app/icons/icon-512.png">
+<meta name="twitter:card" content="summary">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="stylesheet" href="styles.css">
+<script>
+/* Applied before first paint so a saved theme/font/text-size never flashes
+   the default dark 16px look first. Mirrors readState() in app.js. */
+(function(){
+  try{
+    var s=JSON.parse(localStorage.getItem('ucn_s')||'{}');
+    var r=document.documentElement;
+    if(s.th) r.setAttribute('data-theme',s.th);
+    if(s.fn&&s.fn!=='system') r.setAttribute('data-font',s.fn);
+    if(s.fs) r.style.setProperty('--font-size',s.fs+'px');
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
+<svg class="sprite" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="i-info" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></g></symbol>
+  <symbol id="i-dice" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.15" fill="currentColor" stroke="none"/></g></symbol>
+  <symbol id="i-starOutline" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3-4.8-4.3 6.3-.6L12 3z"/></g></symbol>
+  <symbol id="i-starFilled" viewBox="0 0 24 24"><g fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3-4.8-4.3 6.3-.6L12 3z"/></g></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><path d="M7 4.5v15l13-7.5-13-7.5z"/></g></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><rect x="6.5" y="4.5" width="4" height="15"/><rect x="13.5" y="4.5" width="4" height="15"/></g></symbol>
+  <symbol id="i-pencil" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l.8-3.6L15.4 5.8l2.8 2.8L7.6 19.2 4 20z"/><path d="M13.6 7.6l2.8 2.8"/></g></symbol>
+  <symbol id="i-musicnote" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="17.5" r="2.1" fill="currentColor" stroke="none"/><circle cx="16" cy="15.3" r="2.1" fill="currentColor" stroke="none"/><path d="M9.5 17.5V5.6l8-1.7v10.4"/></g></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.2c2-1 4.7-1 7 0v13.6c-2.3-1-5-1-7 0V5.2z"/><path d="M20.5 5.2c-2-1-4.7-1-7 0v13.6c2.3-1 5-1 7 0V5.2z"/></g></symbol>
+  <symbol id="i-warning" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l9.5 16.5H2.5L12 3.2z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/></g></symbol>
+  <symbol id="i-repeat" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5v4.5a3.5 3.5 0 0 0 3.5 3.5h11.5"/><polyline points="15.5,9.5 19.5,13 15.5,16.5"/></g></symbol>
+  <symbol id="i-searchSlash" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.3" y1="15.3" x2="20.5" y2="20.5"/><line x1="4" y1="20" x2="17" y2="4"/></g></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="5.5" y1="3" x2="5.5" y2="21"/><path d="M5.5 4.2c2.8-1.4 4.9-1.4 7.5 0 2.6 1.4 4.7 1.4 7.5 0v8.6c-2.8 1.4-4.9 1.4-7.5 0-2.6-1.4-4.7-1.4-7.5 0V4.2z"/></g></symbol>
+  <symbol id="i-beer" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h9.5v9.5a2 2 0 0 1-2 2h-5.5a2 2 0 0 1-2-2V8z"/><path d="M15 10h1.7a2 2 0 0 1 2 2v1.5a2 2 0 0 1-2 2H15"/><path d="M7.3 8V5h5.4v3"/></g></symbol>
+  <symbol id="i-drum" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="6.7" ry="2.8"/><path d="M5.3 7v9c0 1.5 3 2.8 6.7 2.8s6.7-1.3 6.7-2.8V7"/><path d="M5.3 7c0 1.55 3 2.8 6.7 2.8s6.7-1.25 6.7-2.8"/></g></symbol>
+  <symbol id="i-guitar" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="16" r="4.2"/><circle cx="9" cy="16" r="1.6"/><path d="M11.3 12.8L17.5 3"/><path d="M15.7 5.3l2.6 1.7"/><path d="M17.3 3.1l2.2 1.5"/></g></symbol>
+  <symbol id="i-notepad" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5l4 4V21H6z"/><path d="M14.5 3v4H18.5"/><line x1="9" y1="12.5" x2="15.5" y2="12.5"/><line x1="9" y1="16" x2="15.5" y2="16"/></g></symbol>
+  <symbol id="i-anchor" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5.7" r="2.1"/><line x1="12" y1="7.8" x2="12" y2="20"/><path d="M5.8 12.5a6.2 6.2 0 0 0 12.4 0"/><line x1="6.8" y1="12.5" x2="3.8" y2="12.5"/><line x1="20.2" y1="12.5" x2="17.2" y2="12.5"/></g></symbol>
+  <symbol id="i-clapper" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 8.3h17.6v11.2a1 1 0 0 1-1 1H4.2a1 1 0 0 1-1-1V8.3z"/><path d="M3.2 8.3l1.7-4.6h3.6L6.8 8.3M10.9 8.3l1.7-4.6h3.6l-1.7 4.6M18 8.3l1.3-3.5"/></g></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v3.6M12 17.9v3.6M2.5 12h3.6M17.9 12h3.6M5.6 5.6l2.5 2.5M15.9 15.9l2.5 2.5M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/></g></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.3" y1="15.3" x2="20.5" y2="20.5"/></g></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></g></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7,10 12,15 17,10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></g></symbol>
+  <symbol id="i-spinnerArc" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/></g></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3.4M12 18.1v3.4M21.5 12h-3.4M5.9 12H2.5M18.9 5.1l-2.4 2.4M7.5 16.5l-2.4 2.4M18.9 18.9l-2.4-2.4M7.5 7.5 5.1 5.1"/></g></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11,6 5,12 11,18"/></g></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><polyline points="8,7.5 12,3.5 16,7.5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></g></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="7" x2="20" y2="7"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="8" y1="17" x2="20" y2="17"/><circle cx="4.3" cy="7" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.3" cy="12" r="1.1" fill="currentColor" stroke="none"/><circle cx="4.3" cy="17" r="1.1" fill="currentColor" stroke="none"/></g></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.5h17l-6.5 7.6V20l-4-2.2v-5.2L3.5 5.5z"/></g></symbol>
+</svg>
 <div id="app">
   <header class="hdr">
     <div class="hdr-l">
-      <img class="logo" src="data:image/png;base64,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" alt="UCN">
+      <img class="logo" src="data:image/png;base64,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" alt="" width="86" height="72">
       <span class="site-title">UCN Songbook</span>
     </div>
     <div class="hdr-r">
-      <button class="ibtn" id="btn-export-pdf" title="Export Songbook PDF"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7,10 12,15 17,10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg></button>
-      <button class="ibtn" id="btn-about" title="About"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg></button>
-      <button class="ibtn" id="btn-rand" title="Random song"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.15" fill="currentColor" stroke="none"/></svg></button>
-      <button class="ibtn" id="btn-settings" title="Settings"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3.4M12 18.1v3.4M21.5 12h-3.4M5.9 12H2.5M18.9 5.1l-2.4 2.4M7.5 16.5l-2.4 2.4M18.9 18.9l-2.4-2.4M7.5 7.5 5.1 5.1"/></svg></button>
+      <button class="ibtn" id="btn-export-pdf" aria-label="Export songbook as PDF" title="Export songbook PDF"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-download"/></svg></button>
+      <button class="ibtn" id="btn-about" aria-label="About this songbook" title="About"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-info"/></svg></button>
+      <button class="ibtn" id="btn-rand" aria-label="Show a random song" title="Random song"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-dice"/></svg></button>
+      <button class="ibtn" id="btn-settings" aria-label="Settings" title="Settings"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-gear"/></svg></button>
     </div>
   </header>
   <div class="portal-bar">
     <a class="portal-link" href="https://toolportal.netlify.app">Tool Portal</a>
   </div>
   <div id="list-view">
-    <div class="sw"><div class="sb"><span class="si"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.3" y1="15.3" x2="20.5" y2="20.5"/></svg></span><input class="sinp" id="search-input" type="search" placeholder="Search songs or tunes..." autocomplete="off" spellcheck="false"><button class="xcbtn" id="xcbtn" aria-label="Clear"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button></div></div>
-    <div class="cw"><div class="cats" id="cat-tabs"></div></div>
+    <div class="sw">
+      <div class="sb">
+        <span class="si"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-search"/></svg></span>
+        <label class="sr-only" for="search-input">Search songs, tunes, authors or lyrics</label>
+        <input class="sinp" id="search-input" type="search" placeholder="Search songs, tunes or lyrics..." autocomplete="off" spellcheck="false" enterkeyhint="search">
+        <button class="xcbtn" id="xcbtn" aria-label="Clear search"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
+      </div>
+    </div>
+    <div class="cw"><div class="cats" id="cat-tabs" role="tablist" aria-label="Song categories"></div></div>
     <div class="lmeta-row">
-      <span class="lmeta" id="list-meta"></span>
-      <button class="clear-all-pill" id="clear-all-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg> Clear filters</button>
+      <span class="lmeta" id="list-meta" role="status" aria-live="polite"></span>
+      <button class="clear-all-pill" id="clear-all-btn"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-close"/></svg> Clear filters</button>
     </div>
     <div class="slist" id="song-list"></div>
   </div>
-  <div id="detail-view">
+  <div id="detail-view" aria-label="Song" role="region">
     <div class="dbar">
-      <button class="bbtn" id="btn-back"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="11,6 5,12 11,18"/></svg> Back</button>
+      <button class="bbtn" id="btn-back"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-back"/></svg> Back</button>
       <div class="dact">
-        <button class="ibtn" id="btn-fav" title="Favourite"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3-4.8-4.3 6.3-.6L12 3z"/></svg></button>
-        <button class="ibtn" id="btn-drand" title="Random"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.15" fill="currentColor" stroke="none"/></svg></button>
+        <button class="ibtn" id="btn-scroll" aria-label="Start auto-scroll" title="Auto-scroll"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-play"/></svg></button>
+        <button class="ibtn" id="btn-share" aria-label="Share this song" title="Share"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-share"/></svg></button>
+        <button class="ibtn" id="btn-fav" aria-pressed="false" aria-label="Add to favourites" title="Favourite"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-starOutline"/></svg></button>
+        <button class="ibtn" id="btn-drand" aria-label="Show a random song" title="Random"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-dice"/></svg></button>
       </div>
     </div>
     <div class="sinfo" id="song-info"></div>
-    <div class="lw" id="lw"></div>
+    <div class="lw" id="lw" tabindex="-1"></div>
   </div>
 </div>
+
 <div class="overlay" id="sov"></div>
-<div class="panel" id="spanel">
-  <div class="sh"></div><div class="stitle">Settings</div>
-  <div class="srow"><div class="slabel"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="17.5" r="2.1" fill="currentColor" stroke="none"/><circle cx="16" cy="15.3" r="2.1" fill="currentColor" stroke="none"/><path d="M9.5 17.5V5.6l8-1.7v10.4"/></svg> Highlight Choruses</div><label class="tog"><input type="checkbox" id="tog-chorus" checked><span class="tslider"></span></label></div>
-  <div class="srow"><div class="slabel"><svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="17.5" r="2.1" fill="currentColor" stroke="none"/><circle cx="16" cy="15.3" r="2.1" fill="currentColor" stroke="none"/><path d="M9.5 17.5V5.6l8-1.7v10.4"/></svg> Chorus Display</div><div class="fbtns"><button class="fbtn cdbtn active" data-cd="once">Once only</button><button class="fbtn cdbtn" data-cd="full">Every time</button></div></div>
-  <div class="srow"><div class="slabel">Aa Font</div><div class="fbtns"><button class="fbtn active" data-font="system">Default</button><button class="fbtn" data-font="exo">Exo 2</button><button class="fbtn" data-font="dyslexic">Dyslexic</button></div></div>
-  <div class="srow"><div class="slabel">Text Size</div><div class="szw"><button class="szbtn" id="size-down">A&#8722;</button><span class="szval" id="size-val">16px</span><button class="szbtn" id="size-up">A+</button></div></div>
+<div class="panel" id="spanel" role="dialog" aria-modal="true" aria-labelledby="spanel-title" aria-hidden="true">
+  <div class="sh"></div><div class="stitle" id="spanel-title">Settings</div>
+  <div class="srow">
+    <div class="slabel"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-musicnote"/></svg> Highlight Choruses</div>
+    <label class="tog"><input type="checkbox" id="tog-chorus" checked aria-label="Highlight choruses"><span class="tslider"></span></label>
+  </div>
+  <div class="srow">
+    <div class="slabel"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-musicnote"/></svg> Chorus Display</div>
+    <div class="fbtns" role="group" aria-label="Chorus display">
+      <button class="fbtn cdbtn active" data-cd="once">Once only</button>
+      <button class="fbtn cdbtn" data-cd="full">Every time</button>
+    </div>
+  </div>
+  <div class="srow">
+    <div class="slabel">Theme</div>
+    <div class="fbtns" role="group" aria-label="Theme">
+      <button class="fbtn thbtn" data-th="dark">Dark</button>
+      <button class="fbtn thbtn" data-th="light">Light</button>
+      <button class="fbtn thbtn" data-th="auto">Auto</button>
+    </div>
+  </div>
+  <div class="srow">
+    <div class="slabel">Aa Font</div>
+    <div class="fbtns" role="group" aria-label="Font">
+      <button class="fbtn fontbtn" data-font="system">Default</button>
+      <button class="fbtn fontbtn" data-font="exo">Exo 2</button>
+      <button class="fbtn fontbtn" data-font="dyslexic">Dyslexic</button>
+    </div>
+  </div>
+  <div class="srow">
+    <div class="slabel">Text Size</div>
+    <div class="szw">
+      <button class="szbtn" id="size-down" aria-label="Decrease text size">A&#8722;</button>
+      <span class="szval" id="size-val" role="status" aria-live="polite">16px</span>
+      <button class="szbtn" id="size-up" aria-label="Increase text size">A+</button>
+    </div>
+  </div>
+  <div class="srow">
+    <div>
+      <div class="slabel">Keep screen awake</div>
+      <div class="shint">While a song is open, on supported browsers</div>
+    </div>
+    <label class="tog"><input type="checkbox" id="tog-wake" checked aria-label="Keep screen awake while a song is open"><span class="tslider"></span></label>
+  </div>
+  <div class="srow">
+    <div class="slabel">Auto-scroll speed</div>
+    <div class="spw">
+      <input type="range" id="scroll-speed" min="8" max="90" step="2" value="26" aria-label="Auto-scroll speed in pixels per second">
+      <span class="spl" id="scroll-speed-val">26</span>
+    </div>
+  </div>
 </div>
+
 <div class="overlay" id="aov"></div>
-<div class="panel" id="apanel">
+<div class="panel" id="apanel" role="dialog" aria-modal="true" aria-labelledby="apanel-title" aria-hidden="true">
   <div class="sh"></div>
-  <div class="about-logo"><img src="data:image/png;base64,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" alt="UCN Logo"></div>
-  <div class="stitle" style="margin-bottom:4px">UCN Songbook</div>
-  <p style="text-align:center;font-size:.8rem;color:var(--text-dim);margin-bottom:16px">Updated 26 June 2026</p>
+  <div class="about-logo"><img src="data:image/png;base64,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" alt="UCN logo" height="56"></div>
+  <div class="stitle" id="apanel-title" style="margin-bottom:4px">UCN Songbook</div>
+  <p style="text-align:center;font-size:.8rem;color:var(--text-dim);margin-bottom:16px" id="about-updated"></p>
   <div class="about-section"><h3>Made by</h3><p>Sub Lt Tetra &mdash; Discord: <strong>finlay3110</strong></p></div>
   <div class="about-section"><h3>Original Songbook</h3><p>Compiled by Lt. Cmdr. Jim &mdash; Ship&#39;s Councillor</p></div>
   <div class="about-section"><h3>Request updates</h3><p>Post in the <strong>#songbook</strong> channel on the BC Discord server, or DM Tetra directly.</p></div>
@@ -197,282 +189,18 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
     </div>
   </div>
 </div>
-<script>
-/* ============================================================
-   SONGS are loaded from songs.json at startup via fetch().
-   This keeps the app code and song data completely separate:
-     ucn_songbook.html  — the app (rarely changes)
-     songs.json         — the data (edit this to add songs)
 
-   NOTE: fetch() requires a web server (e.g. Netlify).
-   Opening ucn_songbook.html directly as a local file will
-   not work — always access it through the Netlify URL.
-   ============================================================ */
+<div class="overlay" id="eov"></div>
+<div class="panel" id="epanel" role="dialog" aria-modal="true" aria-labelledby="epanel-title" aria-hidden="true">
+  <div class="sh"></div><div class="stitle" id="epanel-title">Export PDF</div>
+  <button class="opt-btn" id="exp-all"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-book"/></svg></span><span class="ob">Whole songbook<span class="oc" id="exp-all-c"></span></span></button>
+  <button class="opt-btn" id="exp-filter"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-filter"/></svg></span><span class="ob">Current filter<span class="oc" id="exp-filter-c"></span></span></button>
+  <button class="opt-btn" id="exp-favs"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-starFilled"/></svg></span><span class="ob">Favourites only<span class="oc" id="exp-favs-c"></span></span></button>
+</div>
 
-/* ============================================================
-   IOS SAFARI VIEWPORT HEIGHT FIX
-   iOS Safari's address bar shows/hides as you scroll, but 100vh
-   is calculated using the LARGEST possible viewport (bar hidden).
-   This caused two bugs: some category tabs appeared unscrollable,
-   and lyrics/panels got cut off at the bottom even when scrolled
-   all the way down. Setting --vh to the true visible height fixes both.
-   ============================================================ */
-function setVH(){
-  document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
-}
-setVH();
-window.addEventListener('resize', setVH);
-window.addEventListener('orientationchange', setVH);
+<div id="toasts" aria-live="polite" aria-atomic="false"></div>
 
-/* ============================================================
-   ICON SYSTEM
-   Hand-built line icons replace emoji throughout the app, since
-   emoji render inconsistently across iOS/Android/desktop (different
-   sizes, styles, sometimes entirely different glyphs). Every icon
-   is a small inline SVG using currentColor, so it automatically
-   matches whatever text colour it's placed in.
-   ============================================================ */
-const ICONS = {
-  info:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16.5"/><circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none"/></svg>',
-  dice:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1.15" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.15" fill="currentColor" stroke="none"/><circle cx="15.5" cy="15.5" r="1.15" fill="currentColor" stroke="none"/></svg>',
-  starOutline:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3-4.8-4.3 6.3-.6L12 3z"/></svg>',
-  starFilled:'<svg class="icn" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3l2.7 5.9 6.3.6-4.8 4.3 1.4 6.3L12 16.9 6.4 20.1l1.4-6.3-4.8-4.3 6.3-.6L12 3z"/></svg>',
-  play:'<svg class="icn" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M7 4.5v15l13-7.5-13-7.5z"/></svg>',
-  pause:'<svg class="icn" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6.5" y="4.5" width="4" height="15"/><rect x="13.5" y="4.5" width="4" height="15"/></svg>',
-  pencil:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l.8-3.6L15.4 5.8l2.8 2.8L7.6 19.2 4 20z"/><path d="M13.6 7.6l2.8 2.8"/></svg>',
-  musicnote:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="7.5" cy="17.5" r="2.1" fill="currentColor" stroke="none"/><circle cx="16" cy="15.3" r="2.1" fill="currentColor" stroke="none"/><path d="M9.5 17.5V5.6l8-1.7v10.4"/></svg>',
-  book:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 5.2c2-1 4.7-1 7 0v13.6c-2.3-1-5-1-7 0V5.2z"/><path d="M20.5 5.2c-2-1-4.7-1-7 0v13.6c2.3-1 5-1 7 0V5.2z"/></svg>',
-  warning:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2l9.5 16.5H2.5L12 3.2z"/><line x1="12" y1="9.5" x2="12" y2="14"/><circle cx="12" cy="16.8" r="1" fill="currentColor" stroke="none"/></svg>',
-  repeat:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 5v4.5a3.5 3.5 0 0 0 3.5 3.5h11.5"/><polyline points="15.5,9.5 19.5,13 15.5,16.5"/></svg>',
-  searchSlash:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.3" y1="15.3" x2="20.5" y2="20.5"/><line x1="4" y1="20" x2="17" y2="4"/></svg>',
-  flag:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><line x1="5.5" y1="3" x2="5.5" y2="21"/><path d="M5.5 4.2c2.8-1.4 4.9-1.4 7.5 0 2.6 1.4 4.7 1.4 7.5 0v8.6c-2.8 1.4-4.9 1.4-7.5 0-2.6-1.4-4.7-1.4-7.5 0V4.2z"/></svg>',
-  beer:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8h9.5v9.5a2 2 0 0 1-2 2h-5.5a2 2 0 0 1-2-2V8z"/><path d="M15 10h1.7a2 2 0 0 1 2 2v1.5a2 2 0 0 1-2 2H15"/><path d="M7.3 8V5h5.4v3"/></svg>',
-  drum:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="7" rx="6.7" ry="2.8"/><path d="M5.3 7v9c0 1.5 3 2.8 6.7 2.8s6.7-1.3 6.7-2.8V7"/><path d="M5.3 7c0 1.55 3 2.8 6.7 2.8s6.7-1.25 6.7-2.8"/></svg>',
-  guitar:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="16" r="4.2"/><circle cx="9" cy="16" r="1.6"/><path d="M11.3 12.8L17.5 3"/><path d="M15.7 5.3l2.6 1.7"/><path d="M17.3 3.1l2.2 1.5"/></svg>',
-  notepad:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8.5l4 4V21H6z"/><path d="M14.5 3v4H18.5"/><line x1="9" y1="12.5" x2="15.5" y2="12.5"/><line x1="9" y1="16" x2="15.5" y2="16"/></svg>',
-  anchor:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5.7" r="2.1"/><line x1="12" y1="7.8" x2="12" y2="20"/><path d="M5.8 12.5a6.2 6.2 0 0 0 12.4 0"/><line x1="6.8" y1="12.5" x2="3.8" y2="12.5"/><line x1="20.2" y1="12.5" x2="17.2" y2="12.5"/></svg>',
-  clapper:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3.2 8.3h17.6v11.2a1 1 0 0 1-1 1H4.2a1 1 0 0 1-1-1V8.3z"/><path d="M3.2 8.3l1.7-4.6h3.6L6.8 8.3M10.9 8.3l1.7-4.6h3.6l-1.7 4.6M18 8.3l1.3-3.5"/></svg>',
-  sparkle:'<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5v3.6M12 17.9v3.6M2.5 12h3.6M17.9 12h3.6M5.6 5.6l2.5 2.5M15.9 15.9l2.5 2.5M18.4 5.6l-2.5 2.5M8.1 15.9l-2.5 2.5"/><circle cx="12" cy="12" r="1.7" fill="currentColor" stroke="none"/></svg>'
-};
-
-/* Maps each song category to the name of its icon in ICONS above.
-   Add a new line here whenever a new category is introduced. */
-const CAT_ICON_NAMES = {
-  'Patriotic Songs':'flag','Bar/Drinking Songs':'beer','Crew Ballads':'drum',
-  'Accompanied Songs':'musicnote','Songs About Us':'starOutline',
-  'Fragments and Works in Progress':'notepad','Traditional Songs':'anchor',
-  'Movie/TV':'clapper','Improvised Songs':'sparkle','Folk & Other':'guitar'
-};
-function catIcon(cat){ return ICONS[CAT_ICON_NAMES[cat]] || ICONS.musicnote; }
-
-/* App-wide song list — populated after fetch completes */
-let SONGS = [];
-
-/* Settings state */
-let state={category:'All',query:'',currentSong:null,favourites:[],highlightChorus:true,chorusDisplay:'once',fontSize:16,font:'system'};
-try{var _s=JSON.parse(localStorage.getItem('ucn_s')||'{}');if(_s.f)state.favourites=_s.f;if(_s.hc!==undefined)state.highlightChorus=_s.hc;if(_s.cd)state.chorusDisplay=_s.cd;if(_s.fs)state.fontSize=_s.fs;if(_s.fn)state.font=_s.fn;}catch(e){}
-function saveState(){try{localStorage.setItem('ucn_s',JSON.stringify({f:state.favourites,hc:state.highlightChorus,cd:state.chorusDisplay,fs:state.fontSize,fn:state.font}));}catch(e){}}
-
-/* Helpers */
-function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function filteredSongs(){var q=state.query.toLowerCase();return SONGS.filter(function(s){if(state.category==='Favourites'){if(state.favourites.indexOf(s.id)===-1)return false;}else if(state.category!=='All'&&s.category!==state.category){return false;}if(!q)return true;return s.title.toLowerCase().indexOf(q)>-1||(s.tune&&s.tune.toLowerCase().indexOf(q)>-1)||(s.words&&s.words.toLowerCase().indexOf(q)>-1);});}
-
-/* Lyric rendering */
-function chorusBlockHtml(lines){var hl=state.highlightChorus;var html='<div class="lyric-chorus'+(hl?'':' no-highlight')+'"><div class="chorus-label">'+ICONS.musicnote+' Chorus</div>';html+=lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('');return html+'</div>';}
-function renderLyrics(lyrics){var blocks=lyrics.split('\n\n'),html='',chorusLines=null;for(var i=0;i<blocks.length;i++){var block=blocks[i],lines=block.split('\n'),first=(lines[0]||'').trim();if(!first)continue;if(/^\[.+\]$/.test(first)&&lines.length<=2){html+='<div class="lyric-section-label">'+esc(first.slice(1,-1))+'</div>';continue;}if(/^repeat /i.test(first)&&lines.length<=2){if(state.chorusDisplay==='full'&&chorusLines)html+=chorusBlockHtml(chorusLines);else html+='<p class="lyric-instruction">'+ICONS.repeat+' '+esc(block.trim())+'</p>';continue;}if(/^(chorus[\s\d]*:?|\[chorus[\s\d]*\])/i.test(first)){var content=lines.slice(1);if(!chorusLines)chorusLines=content;html+=chorusBlockHtml(content);continue;}html+='<div class="lyric-block">'+lines.map(function(l){return '<p>'+(l?esc(l):'&nbsp;')+'</p>';}).join('')+'</div>';}return html;}
-
-/* List rendering */
-function renderList(){
-  var songs=filteredSongs(),el=document.getElementById('song-list'),meta=document.getElementById('list-meta');
-  meta.textContent=songs.length===SONGS.length?SONGS.length+' songs':songs.length+' of '+SONGS.length+' songs';
-  document.getElementById('clear-all-btn').classList.toggle('vis', !!state.query && state.category!=='All');
-  if(!songs.length){
-    if(state.category==='Favourites'){
-      el.innerHTML='<div class="no-res"><div class="nr-icon" style="color:var(--star)">'+ICONS.starOutline.replace('class="icn"','class="icn icn-lg"')+'</div><div>No favourites yet</div><div style="font-size:.8rem;margin-top:6px;color:var(--text-dim);">Tap the star on any song to add it here</div></div>';
-    } else {
-      el.innerHTML='<div class="no-res"><div class="nr-icon">'+ICONS.searchSlash.replace('class="icn"','class="icn icn-lg"')+'</div><div>No songs found</div></div>';
-    }
-    return;
-  }
-  var html='';
-  for(var i=0;i<songs.length;i++){var s=songs[i],isFav=state.favourites.indexOf(s.id)>-1;html+='<div class="song-card'+(isFav?' fav':'')+'" data-id="'+s.id+'"><div class="ci">'+catIcon(s.category)+'</div><div class="cb"><div class="ct">'+esc(s.title);if(s.category==='Traditional Songs')html+='<span class="trad-badge">trad</span>';html+='</div><div class="cs">'+ICONS.musicnote+' '+esc(s.tune)+'</div>';if(s.source_book)html+='<div class="cp">'+ICONS.book+' '+esc(s.source_book)+', p.'+s.source_page+'</div>';html+='</div><button class="cstar'+(isFav?' active':'')+'" data-fav="'+s.id+'">'+(isFav?ICONS.starFilled:ICONS.starOutline)+'</button></div>';}
-  el.innerHTML=html;
-}
-
-/* Categories — computed from SONGS each time so new categories appear automatically.
-   'Favourites' is a pseudo-category (not a real song category) inserted after 'All'
-   so people can jump straight to their starred songs. */
-function renderCategories(){
-  var cats=['All','Favourites',...new Set(SONGS.map(function(s){return s.category;}))];
-  var el=document.getElementById('cat-tabs'),html='';
-  for(var i=0;i<cats.length;i++){
-    var c=cats[i],label;
-    if(c==='All') label='All';
-    else if(c==='Favourites') label=ICONS.starFilled+' Favourites';
-    else label=catIcon(c)+' '+c.split('/')[0].replace(' Songs','').replace(' Ballads','').replace(' in Progress','').trim();
-    html+='<button class="cpill'+(state.category===c?' active':'')+(c==='Favourites'?' fav-pill':'')+'" data-cat="'+esc(c)+'">'+label.trim()+'</button>';
-  }
-  el.innerHTML=html;
-}
-
-/* Song detail */
-function showSong(id){var song=null;for(var i=0;i<SONGS.length;i++){if(SONGS[i].id===id){song=SONGS[i];break;}}if(!song)return;state.currentSong=id;var tradBadge=song.category==='Traditional Songs'?'<span class="trad-badge">traditional</span>':'';var sourceRow=song.source_book?'<div class="ir source"><span>'+ICONS.book+'</span><span>'+esc(song.source_book)+', p.'+song.source_page+'</span></div>':'';document.getElementById('song-info').innerHTML='<h1>'+esc(song.title)+tradBadge+'</h1><div class="ir"><span>'+ICONS.musicnote+'</span><span>'+esc(song.tune)+'</span></div><div class="ir"><span>'+ICONS.pencil+'</span><span>'+esc(song.words)+'</span></div>'+sourceRow;document.getElementById('lw').innerHTML=renderLyrics(song.lyrics);document.getElementById('lw').scrollTop=0;updateFavBtn();document.getElementById('list-view').style.display='none';document.getElementById('detail-view').classList.add('vis');}
-function showList(){document.getElementById('detail-view').classList.remove('vis');document.getElementById('list-view').style.display='';state.currentSong=null;}
-function updateFavBtn(){var btn=document.getElementById('btn-fav'),isFav=state.favourites.indexOf(state.currentSong)>-1;btn.innerHTML=isFav?ICONS.starFilled:ICONS.starOutline;btn.classList.toggle('active',isFav);}
-function toggleFav(id){var i=state.favourites.indexOf(id);if(i===-1)state.favourites.push(id);else state.favourites.splice(i,1);saveState();renderList();if(state.currentSong===id)updateFavBtn();}
-function randomSong(){var pool=filteredSongs();if(!pool.length)return;showSong(pool[Math.floor(Math.random()*pool.length)].id);}
-
-/* Panels */
-function openPanel(o,p){document.getElementById(o).classList.add('vis');document.getElementById(p).classList.add('vis');}
-function closePanel(o,p){document.getElementById(o).classList.remove('vis');document.getElementById(p).classList.remove('vis');}
-
-/* Settings */
-function applyFont(f){state.font=f;document.documentElement.removeAttribute('data-font');if(f!=='system')document.documentElement.setAttribute('data-font',f);document.querySelectorAll('.fbtn').forEach(function(b){b.classList.toggle('active',b.dataset.font===f);});saveState();}
-function applyFontSize(sz){state.fontSize=Math.max(12,Math.min(24,sz));document.documentElement.style.setProperty('--font-size',state.fontSize+'px');document.getElementById('size-val').textContent=state.fontSize+'px';saveState();}
-function applyChorusDisplay(v){state.chorusDisplay=v;document.querySelectorAll('.cdbtn').forEach(function(b){b.classList.toggle('active',b.dataset.cd===v);});if(state.currentSong)showSong(state.currentSong);saveState();}
-
-/* Init settings UI from saved state */
-document.getElementById('tog-chorus').checked=state.highlightChorus;
-applyFont(state.font);applyFontSize(state.fontSize);applyChorusDisplay(state.chorusDisplay);
-
-/* Event listeners */
-document.getElementById('tog-chorus').addEventListener('change',function(e){state.highlightChorus=e.target.checked;if(state.currentSong)showSong(state.currentSong);saveState();});
-document.querySelectorAll('.fbtn').forEach(function(b){b.addEventListener('click',function(){applyFont(b.dataset.font);});});
-document.querySelectorAll('.cdbtn').forEach(function(b){b.addEventListener('click',function(){applyChorusDisplay(b.dataset.cd);});});
-document.getElementById('size-up').addEventListener('click',function(){applyFontSize(state.fontSize+2);});
-document.getElementById('size-down').addEventListener('click',function(){applyFontSize(state.fontSize-2);});
-document.getElementById('btn-settings').addEventListener('click',function(){openPanel('sov','spanel');});
-document.getElementById('sov').addEventListener('click',function(){closePanel('sov','spanel');});
-document.getElementById('btn-about').addEventListener('click',function(){openPanel('aov','apanel');});
-
-/* ============================================================
-   PDF EXPORT — lazy-loads pdf-export.js (jsPDF + fonts + QR/logo,
-   ~900KB) only the first time this button is actually clicked, so
-   a normal visit to browse/search songs never pays that cost.
-   Netlify serves pdf-export.js as a sibling file alongside this
-   HTML and songs.json — no CDN involved.
-   ============================================================ */
-var EXPORT_ICON_DEFAULT = '<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><polyline points="7,10 12,15 17,10"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>';
-var EXPORT_ICON_LOADING = '<svg class="icn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 9 9"/></svg>';
-var pdfModuleLoaded = false;
-var pdfModuleLoading = false;
-
-function loadPdfExportModule(onReady, onError){
-  if (pdfModuleLoaded) { onReady(); return; }
-  if (pdfModuleLoading) { return; } // a load is already in flight; ignore repeat clicks
-  pdfModuleLoading = true;
-  var s = document.createElement('script');
-  s.src = 'pdf-export.js';
-  s.onload = function(){ pdfModuleLoading = false; pdfModuleLoaded = true; onReady(); };
-  s.onerror = function(){ pdfModuleLoading = false; onError(); };
-  document.head.appendChild(s);
-}
-
-document.getElementById('btn-export-pdf').addEventListener('click', function(){
-  var btn = document.getElementById('btn-export-pdf');
-  if (btn.disabled) return;
-  btn.disabled = true;
-  btn.innerHTML = EXPORT_ICON_LOADING;
-  btn.classList.add('spin');
-
-  function finish(){
-    btn.disabled = false;
-    btn.innerHTML = EXPORT_ICON_DEFAULT;
-    btn.classList.remove('spin');
-  }
-
-  loadPdfExportModule(function(){
-    // setTimeout lets the browser repaint the loading state before the
-    // (synchronous, potentially ~1-2s for a full songbook) PDF build runs.
-    setTimeout(function(){
-      try {
-        window.UCN_generateSongbookPDF(SONGS);
-      } catch (e) {
-        alert('Could not generate the PDF: ' + e.message);
-      }
-      finish();
-    }, 30);
-  }, function(){
-    alert('Could not load the PDF export module. Make sure pdf-export.js is deployed alongside this file on Netlify.');
-    finish();
-  });
-});
-document.getElementById('aov').addEventListener('click',function(){closePanel('aov','apanel');});
-document.getElementById('btn-back').addEventListener('click',showList);
-document.getElementById('btn-rand').addEventListener('click',randomSong);
-document.getElementById('btn-drand').addEventListener('click',randomSong);
-document.getElementById('btn-fav').addEventListener('click',function(){toggleFav(state.currentSong);});
-document.getElementById('search-input').addEventListener('input',function(e){state.query=e.target.value;document.getElementById('xcbtn').classList.toggle('vis',!!state.query);renderList();});
-document.getElementById('xcbtn').addEventListener('click',function(){state.query='';document.getElementById('search-input').value='';document.getElementById('xcbtn').classList.remove('vis');renderList();});
-document.getElementById('clear-all-btn').addEventListener('click',function(){state.query='';state.category='All';document.getElementById('search-input').value='';document.getElementById('xcbtn').classList.remove('vis');renderCategories();renderList();});
-document.getElementById('cat-tabs').addEventListener('click',function(e){var pill=e.target.closest('.cpill');if(!pill)return;state.category=pill.dataset.cat;renderCategories();renderList();});
-document.getElementById('song-list').addEventListener('click',function(e){var fav=e.target.closest('[data-fav]');if(fav){e.stopPropagation();toggleFav(+fav.dataset.fav);return;}var card=e.target.closest('.song-card');if(card)showSong(+card.dataset.id);});
-
-/* ============================================================
-   BOOT — fetch songs.json then start the app.
-   Shows a loading spinner while waiting. On success, the songs
-   are also cached to localStorage so the app still works if a
-   later visit happens with no signal (e.g. at a LARP event) —
-   it falls back to the last successfully loaded copy and shows
-   a small offline banner instead of a blank error screen.
-   ============================================================ */
-(function loadSongs(){
-  var listEl = document.getElementById('song-list');
-  var metaEl = document.getElementById('list-meta');
-  var CACHE_KEY = 'ucn_songs_cache';
-  var CACHE_TIME_KEY = 'ucn_songs_cache_time';
-
-  function useSongs(data, fromCache){
-    SONGS = data;
-    renderCategories();
-    renderList();
-    if(fromCache){
-      var when = localStorage.getItem(CACHE_TIME_KEY);
-      var whenText = when ? new Date(+when).toLocaleDateString() : 'a previous visit';
-      var banner = document.createElement('div');
-      banner.className = 'offline-banner';
-      banner.innerHTML = ICONS.warning + ' Offline — showing songs saved from ' + whenText;
-      listEl.parentNode.insertBefore(banner, listEl);
-    }
-  }
-
-  /* Loading state */
-  metaEl.textContent = '';
-  listEl.innerHTML = '<div class="loading"><div class="spinner"></div><span>Loading songs\u2026</span></div>';
-
-  fetch('songs.json')
-    .then(function(r){
-      if(!r.ok) throw new Error('HTTP ' + r.status + ' — is songs.json deployed alongside this file?');
-      return r.json();
-    })
-    .then(function(data){
-      /* Successful fetch — cache it for offline fallback next time */
-      try{
-        localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-        localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-      }catch(e){}
-      useSongs(data, false);
-    })
-    .catch(function(err){
-      /* Fetch failed — try the cached copy before giving up */
-      var cached = null;
-      try{ cached = JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); }catch(e){}
-
-      if(cached && cached.length){
-        useSongs(cached, true);
-        return;
-      }
-
-      metaEl.textContent = '';
-      listEl.innerHTML =
-        '<div class="load-error">' +
-        '<div class="err-icon">'+ICONS.warning.replace('class="icn"','class="icn icn-lg"')+'</div>' +
-        '<p>Could not load songs.</p>' +
-        '<code>' + err.message + '</code>' +
-        '<p style="margin-top:12px;font-size:.8rem;">Make sure <strong>songs.json</strong> is in the same folder as this file on Netlify.</p>' +
-        '</div>';
-    });
-})();
-</script>
+<script src="lyrics.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
