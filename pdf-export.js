@@ -809,43 +809,43 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return y;
     }
 
+    /* Block classification comes from lyrics.js, which index.html loads
+       before this module. It used to be duplicated here, and the two
+       copies had the same bug: [Chorus 1:], [Chorus singers:],
+       [Second Chorus] and [Final Chorus] were not recognised as
+       choruses, so five songs printed their brackets as lyrics. Keep
+       parsing in lyrics.js; keep drawing here. */
     function drawLyrics(song, y){
-      var blocks = song.lyrics.split('\n\n');
-      var chorusLines = null;
+      var blocks = window.UCN_parseLyrics(song.lyrics);
 
       for (var bi = 0; bi < blocks.length; bi++) {
-        var block = blocks[bi];
-        var lines = block.split('\n');
-        var first = (lines[0] || '').trim();
-        if (!first) continue;
+        var b = blocks[bi];
 
-        if (/^\[.+\]$/.test(first) && lines.length <= 2) {
+        if (b.type === 'label') {
           y = ensureRoom(y, 16);
           setBody(9, 'bold', COLOR.accent);
-          doc.text(first.slice(1, -1).toUpperCase(), MARGIN, y);
+          doc.text(String(b.text).toUpperCase(), MARGIN, y);
           y += 16;
           continue;
         }
 
-        if (/^repeat /i.test(first) && lines.length <= 2) {
+        if (b.type === 'repeat') {
           y = ensureRoom(y, 16);
           setBody(9, 'normal', COLOR.faint);
-          doc.text('\u21BA ' + block.trim(), PAGE_W / 2, y, { align: 'center', fontStyle: 'italic' });
+          doc.text('\u21BA ' + b.text, PAGE_W / 2, y, { align: 'center', fontStyle: 'italic' });
           y += 18;
           continue;
         }
 
-        if (/^(chorus[\s\d]*:?|\[chorus[\s\d]*\])/i.test(first)) {
-          var content = lines.slice(1);
-          if (!chorusLines) chorusLines = content;
-          y = drawChorusBox(content, y);
+        if (b.type === 'chorus') {
+          y = drawChorusBox(b.lines, y, b.label);
           continue;
         }
 
-        for (var li = 0; li < lines.length; li++) {
+        for (var li = 0; li < b.lines.length; li++) {
           y = ensureRoom(y, 14);
           setBody(10.5, 'normal', COLOR.text);
-          doc.text(lines[li] || ' ', MARGIN, y);
+          doc.text(b.lines[li] || ' ', MARGIN, y);
           y += 14;
         }
         y += 8;
@@ -853,7 +853,7 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
       return y;
     }
 
-    function drawChorusBox(lines, y){
+    function drawChorusBox(lines, y, label){
       var padX = 14, padY = 10, lineH = 14;
       var labelH = 14;
       var boxH = padY * 2 + labelH + lines.length * lineH;
@@ -866,7 +866,9 @@ function(t){t.__bidiEngine__=t.prototype.__bidiEngine__=function(t){var n,r,i,a,
 
       drawTinyNote(MARGIN + padX + 5, y + padY + 6, 9, COLOR.orange);
       setBody(7.5, 'bold', COLOR.orange);
-      doc.text('CHORUS', MARGIN + padX + 16, y + padY + 8);
+      /* Songs with more than one chorus name them ("Chorus 1",
+         "Final Chorus") — print the real label so the PDF is singable. */
+      doc.text(String(label || 'Chorus').toUpperCase(), MARGIN + padX + 16, y + padY + 8);
 
       var ty = y + padY + labelH + 8;
       setBody(10.5, 'normal', COLOR.text);

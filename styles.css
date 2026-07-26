@@ -1,0 +1,244 @@
+/* ============================================================
+   UCN SONGBOOK — STYLES
+   Extracted from index.html so the markup, styling and logic can be
+   read and edited separately. No build step: this is plain CSS, loaded
+   directly by index.html.
+   ============================================================ */
+
+/* ── SELF-HOSTED FONTS ───────────────────────────────────────
+   Both fonts used to be pulled from CDNs (Google Fonts / jsDelivr),
+   which meant they silently failed for anyone offline at an event —
+   including the dyslexia-friendly face, which is an accessibility
+   setting that should never depend on the network. Both are now served
+   from fonts/ and precached by the service worker. Licences in
+   fonts/LICENSE.md (both OFL 1.1).
+   ─────────────────────────────────────────────────────────── */
+@font-face{
+  font-family:'Exo 2';font-style:normal;font-weight:300 700;font-display:swap;
+  src:url('fonts/exo2-latin.woff2') format('woff2');
+  unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+}
+@font-face{
+  font-family:'Exo 2';font-style:normal;font-weight:300 700;font-display:swap;
+  src:url('fonts/exo2-latin-ext.woff2') format('woff2');
+  unicode-range:U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+}
+@font-face{
+  font-family:'OpenDyslexic';font-style:normal;font-weight:400;font-display:swap;
+  src:url('fonts/opendyslexic-latin-400-normal.woff2') format('woff2');
+}
+@font-face{
+  font-family:'OpenDyslexic';font-style:normal;font-weight:700;font-display:swap;
+  src:url('fonts/opendyslexic-latin-700-normal.woff2') format('woff2');
+}
+
+/* ── THEME ───────────────────────────────────────────────────
+   Dark stays the default — it is what the app has always looked like
+   and it suits the dim rooms this gets used in. Light and Auto are
+   opt-in from Settings. `--text-dim` was #4E5A6A, which measured
+   2.3:1 against the surface colour and failed WCAG AA; both themes now
+   clear 4.5:1 against the surface AND the page background, while
+   staying visually recessed.
+   ─────────────────────────────────────────────────────────── */
+:root,:root[data-theme="dark"]{
+  --bg:#0E1626;--surface:#152238;--surface2:#1C2A46;--border:#2B3A52;
+  --accent:#4FA8C9;--accent-glow:rgba(79,168,201,0.2);
+  --chorus-bg:rgba(221,122,43,0.10);--chorus-border:#DD7A2B;
+  --text:#EAF0FB;--text-muted:#8C949E;--text-dim:#7D8A9E;
+  --star:#E39A3E;--hdr:#1B2A5E;--tag-bg:#1C3A52;--font-size:16px;
+  --mark-bg:rgba(79,168,201,0.28);--mark-text:#EAF0FB;
+  --toast-bg:#1C2A46;--scrim:rgba(5,10,20,.7);
+}
+:root[data-theme="light"]{
+  --bg:#F2F5FA;--surface:#FFFFFF;--surface2:#E9EEF6;--border:#CFD8E5;
+  --accent:#1A6B88;--accent-glow:rgba(26,107,136,0.18);
+  --chorus-bg:rgba(176,88,16,0.09);--chorus-border:#A6540F;
+  --text:#111C2C;--text-muted:#4A5566;--text-dim:#657086;
+  --star:#8A5605;--hdr:#1B2A5E;--tag-bg:#DBE6F1;
+  --mark-bg:rgba(26,107,136,0.22);--mark-text:#111C2C;
+  --toast-bg:#22314A;--scrim:rgba(10,18,32,.55);
+}
+@media (prefers-color-scheme:light){
+  :root[data-theme="auto"]{
+    --bg:#F2F5FA;--surface:#FFFFFF;--surface2:#E9EEF6;--border:#CFD8E5;
+    --accent:#1A6B88;--accent-glow:rgba(26,107,136,0.18);
+    --chorus-bg:rgba(176,88,16,0.09);--chorus-border:#A6540F;
+    --text:#111C2C;--text-muted:#4A5566;--text-dim:#657086;
+    --star:#8A5605;--hdr:#1B2A5E;--tag-bg:#DBE6F1;
+    --mark-bg:rgba(26,107,136,0.22);--mark-text:#111C2C;
+    --toast-bg:#22314A;--scrim:rgba(10,18,32,.55);
+  }
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-serif;font-size:var(--font-size);background:var(--bg);color:var(--text);}
+[data-font="exo"] *{font-family:'Exo 2',sans-serif!important;}
+[data-font="dyslexic"] *{font-family:'OpenDyslexic',sans-serif!important;letter-spacing:.05em;word-spacing:.1em;line-height:1.8!important;}
+
+/* Keyboard focus needs to be visible — the app is used on desktop too. */
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px;}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+.sprite{display:none;}
+
+/* 100dvh handles the iOS Safari address-bar problem on its own now;
+   the older 100vh + JS --vh workaround has been removed. */
+#app{display:flex;flex-direction:column;height:100dvh;}
+@supports not (height:100dvh){#app{height:100vh;}}
+
+.hdr{background:var(--hdr);border-bottom:2px solid var(--accent);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10;}
+.hdr::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 15% 35%,rgba(255,255,255,.35) 0%,transparent 100%),radial-gradient(1px 1px at 40% 65%,rgba(255,255,255,.2) 0%,transparent 100%),radial-gradient(1px 1px at 72% 28%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 58% 52%,rgba(79,168,201,.5) 0%,transparent 100%);}
+.hdr-l{display:flex;align-items:center;gap:10px;z-index:1;min-width:0;}.hdr-r{display:flex;align-items:center;gap:6px;z-index:1;flex-shrink:0;}
+.logo{height:38px;width:auto;flex-shrink:0;}
+/* Kept on one line — the four header buttons used to squeeze this into a
+   wrapped two-line title. Below ~420px there is genuinely not room for it
+   next to those buttons, so the wordmark gives way to the logo rather than
+   truncating to "UCN Songb…" or shrinking the tap targets. */
+.site-title{font-size:1.05rem;font-weight:700;color:#EAF0FB;letter-spacing:.04em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+@media (max-width:419px){
+  .site-title{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0;}
+}
+.ibtn{background:none;border:none;color:rgba(234,240,251,0.6);width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.15rem;transition:color .2s,background .2s;}
+.ibtn:hover,.ibtn.active{color:var(--accent);background:rgba(79,168,201,0.12);}
+.ibtn[disabled]{opacity:.55;cursor:default;}
+.dbar .ibtn{color:var(--text-muted);}
+.portal-bar{background:rgba(27,42,94,0.6);border-bottom:1px solid var(--border);padding:6px 16px;flex-shrink:0;}
+:root[data-theme="light"] .portal-bar{background:var(--surface2);}
+.portal-link{display:inline-flex;align-items:center;gap:5px;color:var(--text-muted);font-size:.75rem;text-decoration:none;transition:color .2s;}
+.portal-link:hover{color:var(--accent);}
+.portal-link::before{content:'\2190';}
+#list-view{display:flex;flex-direction:column;flex:1;overflow:hidden;}
+#list-view[hidden]{display:none;}
+.sw{padding:12px 16px 8px;flex-shrink:0;}
+.sb{display:flex;align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:0 12px;gap:8px;transition:border-color .2s;}
+.sb:focus-within{border-color:var(--accent);}
+.si{color:var(--text-muted);font-size:1rem;display:flex;}
+.sinp{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1rem;padding:10px 0;font-family:inherit;}
+.sinp::placeholder{color:var(--text-dim);}
+/* Chromium draws its own clear button inside type=search, which sat right
+   next to ours — two X buttons in one field. */
+.sinp::-webkit-search-cancel-button,.sinp::-webkit-search-decoration{-webkit-appearance:none;appearance:none;}
+.xcbtn{background:none;border:none;color:var(--text-dim);cursor:pointer;padding:4px;display:none;align-items:center;font-size:.9rem;}
+.xcbtn.vis{display:flex;}
+.cw{padding:0 16px 8px;flex-shrink:0;}
+.cats{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cpill{flex-shrink:0;padding:5px 14px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:.8rem;font-weight:500;cursor:pointer;transition:background .2s,border-color .2s,color .2s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+.cpill.active{background:var(--accent);border-color:var(--accent);color:var(--bg);}
+.cpill.fav-pill:not(.active){color:var(--star);border-color:rgba(227,154,62,0.35);}
+.cpill.fav-pill.active{background:var(--star);border-color:var(--star);color:#1a1200;}
+.cpill:not(.active):hover{border-color:var(--accent);color:var(--accent);}
+.lmeta-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 16px 6px;flex-shrink:0;}
+.lmeta{color:var(--text-dim);font-size:.75rem;}
+.clear-all-pill{display:none;align-items:center;gap:4px;background:none;border:1px solid var(--border);color:var(--text-muted);font-size:.7rem;padding:3px 10px;border-radius:12px;cursor:pointer;white-space:nowrap;transition:color .2s,border-color .2s;}
+.clear-all-pill.vis{display:inline-flex;}
+.clear-all-pill:hover{color:var(--accent);border-color:var(--accent);}
+.clear-all-pill svg{width:.85em;height:.85em;}
+.slist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(100px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.slist::-webkit-scrollbar{width:4px;}.slist::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+/* The row is a plain container holding two real buttons — the song
+   itself and the star. It used to be one clickable <div> with a nested
+   button inside, which gave keyboard users no way to open a song. */
+.song-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;transition:border-color .2s,box-shadow .2s,transform .1s;display:flex;align-items:center;border-left:3px solid transparent;overflow:hidden;}
+.song-card:hover{border-left-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow);}
+.song-card:active{transform:scale(.98);}.song-card.fav{border-left-color:var(--star);}
+.cmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:none;color:inherit;font:inherit;text-align:left;padding:12px 4px 12px 14px;cursor:pointer;}
+.ci{width:36px;height:36px;border-radius:8px;background:var(--tag-bg);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;color:var(--accent);}
+/* ── ICON SYSTEM ─────────────────────────────────────────────
+   Hand-built line-icon set (replaces emoji, which render
+   inconsistently across iOS/Android/desktop). Defined once as an SVG
+   <symbol> sprite in index.html and referenced with <use>, so the
+   markup and the JS can share one copy instead of two. Icons scale
+   with the font-size of their container (1em), so no per-instance
+   sizing is needed. .icn-lg is for the large centred icons. */
+.icn{width:1em;height:1em;display:inline-block;vertical-align:-0.15em;flex-shrink:0;}
+.icn-lg{width:2.4rem;height:2.4rem;vertical-align:middle;}
+.ibtn.spin .icn{animation:ibtn-spin 0.9s linear infinite;}
+@keyframes ibtn-spin{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){.ibtn.spin .icn{animation:none;}}
+#btn-fav.active{color:var(--star)!important;background:rgba(227,154,62,0.12)!important;}
+.cb{flex:1;min-width:0;}
+.ct{font-weight:600;font-size:.95rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.cs{font-size:.75rem;color:var(--text-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+.cp{font-size:.7rem;color:var(--text-dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;}
+/* Snippet shown when a song matched on its lyrics rather than its title */
+.csnip{font-size:.72rem;color:var(--text-muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-style:italic;display:block;}
+mark{background:var(--mark-bg);color:var(--mark-text);border-radius:3px;padding:0 1px;}
+.cstar{color:var(--text-dim);font-size:1.2rem;flex-shrink:0;width:48px;align-self:stretch;display:flex;align-items:center;justify-content:center;background:none;border:none;cursor:pointer;}
+.cstar.active{color:var(--star);}
+.no-res{text-align:center;padding:40px 16px;color:var(--text-muted);}.nr-icon{font-size:2.5rem;margin-bottom:12px;}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--text-muted);}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+@media (prefers-reduced-motion:reduce){.spinner{animation-duration:2.4s;}}
+.load-error{text-align:center;padding:40px 16px;color:var(--text-muted);}
+.load-error .err-icon{font-size:2.5rem;margin-bottom:12px;}
+.load-error code{display:block;margin-top:8px;font-size:.75rem;color:var(--text-dim);background:var(--surface2);padding:6px 10px;border-radius:6px;}
+.offline-banner{margin:0 16px 8px;background:rgba(227,154,62,0.1);border:1px solid rgba(227,154,62,0.3);color:var(--star);font-size:.75rem;padding:8px 12px;border-radius:8px;}
+#detail-view{display:none;flex-direction:column;flex:1;overflow:hidden;}#detail-view.vis{display:flex;}
+.dbar{padding:0 8px;height:48px;display:flex;align-items:center;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
+.bbtn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;padding:8px;border-radius:8px;}
+.bbtn:hover{background:var(--accent-glow);}.dact{margin-left:auto;display:flex;gap:4px;}
+.sinfo{padding:16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sinfo h1{font-size:1.2rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
+.ir{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:.8rem;color:var(--text-muted);}
+.ir.source{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;}
+.lw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px calc(120px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;scroll-behavior:auto;}
+.lw::-webkit-scrollbar{width:4px;}.lw::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.lyric-block{margin-bottom:20px;}.lyric-block p,.lyric-chorus p{line-height:1.75;margin-bottom:1px;font-size:var(--font-size);}
+.lyric-chorus{background:var(--chorus-bg);border-left:3px solid var(--chorus-border);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:20px;}
+.lyric-chorus.no-highlight{background:none;border-left:none;padding-left:0;margin-bottom:20px;}
+.chorus-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--chorus-border);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.no-highlight .chorus-label{display:none;}
+.lyric-instruction{text-align:center;color:var(--text-dim);font-style:italic;font-size:.85rem;margin-bottom:16px;padding:4px;}
+.lyric-section-label{color:var(--accent);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:4px 0;}
+.trad-badge{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent);margin-left:6px;vertical-align:middle;}
+.overlay{position:fixed;inset:0;background:var(--scrim);z-index:30;display:none;backdrop-filter:blur(3px);}
+.overlay.vis{display:block;}
+.panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;z-index:31;padding:18px 20px 24px;transform:translateY(100%);transition:transform .3s ease;overflow-y:auto;max-height:85vh;max-height:85dvh;}
+.panel.vis{transform:translateY(0);}.sh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+@media (prefers-reduced-motion:reduce){.panel{transition:none;}}
+.stitle{font-size:1rem;font-weight:700;margin-bottom:14px;text-align:center;color:var(--accent);}
+.srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
+.srow:last-child{border-bottom:none;}.slabel{font-size:.9rem;color:var(--text);display:flex;align-items:center;gap:6px;}
+.shint{font-size:.72rem;color:var(--text-dim);margin-top:2px;}
+.tog{position:relative;width:44px;height:24px;flex-shrink:0;}.tog input{opacity:0;width:0;height:0;}
+.tslider{position:absolute;inset:0;background:var(--border);border-radius:24px;cursor:pointer;transition:.3s;}
+.tslider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
+.tog input:checked+.tslider{background:var(--accent);}.tog input:checked+.tslider::before{transform:translateX(20px);}
+.tog input:focus-visible+.tslider{outline:2px solid var(--accent);outline-offset:2px;}
+.fbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.fbtn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:inherit;}
+.fbtn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+.szw{display:flex;align-items:center;gap:10px;}
+.szbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,color .2s;font-family:inherit;}
+.szbtn:hover{border-color:var(--accent);color:var(--accent);}
+.szval{font-size:.85rem;color:var(--text-muted);min-width:32px;text-align:center;}
+.spw{display:flex;align-items:center;gap:8px;flex:1;max-width:190px;}.spw input{flex:1;accent-color:var(--accent);}
+.spl{font-size:.8rem;color:var(--text-muted);min-width:34px;text-align:right;}
+.about-section{padding:14px 0;border-bottom:1px solid var(--border);}.about-section:last-child{border-bottom:none;}
+.about-section h3{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:8px;}
+.about-section p{font-size:.85rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.about-section p:last-child{margin-bottom:0;}
+.about-logo{display:flex;justify-content:center;margin-bottom:14px;}.about-logo img{height:56px;width:auto;opacity:.9;}
+.disclaimer-box{background:var(--chorus-bg);border:1px solid var(--chorus-border);border-radius:8px;padding:10px 12px;margin-top:4px;}
+.disclaimer-box p{font-size:.8rem;color:var(--text-muted);line-height:1.6;margin-bottom:4px;}.disclaimer-box p:last-child{margin-bottom:0;}
+@supports(padding-bottom:env(safe-area-inset-bottom)){.panel{padding-bottom:calc(40px + env(safe-area-inset-bottom));}}
+
+/* ── EXPORT SCOPE SHEET ──────────────────────────────────────
+   Export used to always build all 74 songs. This offers the current
+   filter and favourites too. */
+.opt-btn{display:flex;align-items:center;gap:12px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;color:var(--text);font-family:inherit;font-size:.9rem;text-align:left;transition:border-color .2s;}
+.opt-btn:hover:not([disabled]){border-color:var(--accent);}
+.opt-btn[disabled]{opacity:.45;cursor:default;}
+.opt-btn .oi{color:var(--accent);display:flex;}
+.opt-btn .ob{flex:1;min-width:0;}
+.opt-btn .oc{display:block;font-size:.75rem;color:var(--text-dim);margin-top:2px;}
+
+/* ── TOASTS ──────────────────────────────────────────────────
+   Replaces alert(), which on iOS blocks the whole page and looks
+   like a browser error rather than part of the app. */
+#toasts{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));z-index:60;display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none;padding:0 16px;}
+.toast{background:var(--toast-bg);color:#EAF0FB;border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:10px;padding:10px 14px;font-size:.85rem;max-width:440px;box-shadow:0 6px 24px rgba(0,0,0,.35);animation:toast-in .2s ease;}
+.toast.err{border-left-color:#DD7A2B;}
+@keyframes toast-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none;}}

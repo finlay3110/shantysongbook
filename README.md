@@ -10,31 +10,42 @@ A fan-made digital songbook for the **United Confederation Navy (UCN)** communit
 
 ## Features
 
-- 🔍 **Search** by title, tune, or author
+- 🔍 **Search** by title, tune, author **or lyrics** — punctuation- and accent-insensitive, with matches highlighted and a snippet shown for lyric matches
 - 🗂️ **Category filters** (Patriotic, Bar/Drinking, Traditional, Improvised, and more)
 - ⭐ **Favourites** with a dedicated filter tab
-- 🎨 **Chorus highlighting**, adjustable text size, and a dyslexia-friendly font option
+- 🎨 **Chorus highlighting**, adjustable text size, light/dark/auto themes, and a dyslexia-friendly font option
+- 🔗 **Shareable links** — every song has its own URL (`#/song/45`), and the back button works the way you expect
 - 📖 **Source book & page references** for songs from the physical booklets
-- 📄 **Full PDF export** — generates a complete print-ready songbook with a cover page, table of contents, per-section divider pages (each with its own mini table of contents), and a corner-frame design on every page
-- 📱 Built mobile-first for use during events, with an offline cache fallback if the connection drops
+- 🎵 **Auto-scroll** and **keep-screen-awake** for singing hands-free
+- 📄 **PDF export** — the whole songbook, the current filter, or just your favourites, with cover page, table of contents, per-section divider pages and a corner-frame design on every page
+- 📱 **Installable and fully offline** — add it to your home screen and it works with no signal at all
 
 ---
 
 ## File structure
 
 ```
-├── index.html        # The app itself — search, browse, settings, About panel
-├── songs.json         # All song data — edit this file to add/update songs
-├── pdf-export.js       # PDF export engine (jsPDF + fonts + logo/QR assets)
-│                        # Lazily loaded only when someone clicks "Export PDF",
-│                        # so normal browsing never downloads it
+├── index.html                 # Markup, the SVG icon sprite, and PWA wiring
+├── styles.css                 # All styling, including the light/dark themes
+├── app.js                     # App logic — search, filtering, routing, settings
+├── lyrics.js                  # Shared lyric parser (used by the app AND the PDF)
+├── songs.json                 # All song data — edit this file to add/update songs
+├── pdf-export.js              # PDF export engine (jsPDF + fonts + logo/QR assets)
+│                              # Lazily loaded only when someone exports,
+│                              # so normal browsing never downloads it
+├── sw.js                      # Service worker — precaches the app for offline use
+├── manifest.webmanifest       # Makes the app installable to a home screen
+├── fonts/                     # Self-hosted Exo 2 + OpenDyslexic (OFL, see LICENSE.md)
+├── icons/                     # App icons for install / home screen / favicon
 └── tools/
-    └── ucn_song_generator.html   # Standalone helper for formatting new song
-                                    # entries. NOT linked from the app — open
-                                    # it directly in a browser when adding songs.
+    ├── ucn-song-generator.html # Standalone helper for formatting new song entries.
+    │                           # NOT linked from the app — open it directly.
+    └── validate-songs.mjs      # Checks songs.json before it ships (see below)
 ```
 
-All three root-level files must be deployed together in the same folder — the app fetches `songs.json` at runtime, and dynamically loads `pdf-export.js` on demand. The `tools/` folder is for maintainers only; it isn't referenced anywhere in `index.html` and has no effect on the live app if deployed alongside it.
+Everything except `tools/` must be deployed together in the same folder — the app fetches `songs.json` at runtime and loads `pdf-export.js` on demand. The `tools/` folder is for maintainers only and has no effect on the live app.
+
+There is **no build step**. Plain HTML, CSS and JavaScript, edited and deployed as-is.
 
 ---
 
@@ -44,7 +55,10 @@ Songs live in `songs.json` as a plain JSON array. To add one:
 
 1. Open `songs.json`
 2. Paste a new entry before the closing `]`, separated from the previous entry by a comma
-3. Commit and push — Netlify redeploys automatically
+3. **Run `node tools/validate-songs.mjs`** — catches the mistakes that silently break rendering
+4. Commit and push — Netlify redeploys automatically
+
+Step 3 also runs automatically on every push via GitHub Actions (`.github/workflows/validate.yml`).
 
 ### Song entry format
 
@@ -77,30 +91,57 @@ Songs live in `songs.json` as a plain JSON array. To add one:
 **Valid categories:**
 `Patriotic Songs` · `Bar/Drinking Songs` · `Crew Ballads` · `Accompanied Songs` · `Songs About Us` · `Fragments and Works in Progress` · `Traditional Songs` · `Movie/TV` · `Improvised Songs` · `Folk & Other`
 
-**Lyrics formatting:**
+Adding a brand-new category also needs an icon adding to `CAT_ICON_NAMES` in `app.js` — the validator will tell you if you forget.
+
+### Lyrics formatting
+
+Blocks are separated by a **blank line** (`\n\n`). The first line of a block can be a heading:
 
 | Syntax | Result |
 |---|---|
 | `\n` | New line |
-| `\n\n` | Blank line / verse break |
-| `Chorus:` at the start of a block | Renders as a highlighted chorus box |
-| `Repeat chorus` alone on a line | Renders as an italic repeat marker |
-| `[Label]` alone on a line | Renders as a small labelled section (e.g. `[Verse 1]`, `[Bridge]`) |
+| `\n\n` | Blank line / new block |
+| `Chorus:` | Highlighted chorus box |
+| `[Chorus]`, `[Chorus 1:]`, `[Second Chorus]`, `[Refrain]` | Also a chorus box, labelled with whatever you wrote |
+| `Repeat chorus` alone on a line | Italic repeat marker |
+| `[Repeat Chorus 2]` | Repeat marker pointing at a specific chorus |
+| `[Verse 2]`, `[Bridge]`, `[Outro]` | Small labelled section heading — the lines under it stay ordinary lyrics |
 
-A companion song-entry generator tool is included in [`tools/ucn_song_generator.html`](tools/ucn_song_generator.html) — open it directly in a browser (it's not linked from the live app), fill in the fields, and copy the formatted output straight into `songs.json`.
+A heading only works as the **first line of a block**, so always leave a blank line above it. The validator catches it when you forget.
+
+A companion song-entry generator is included at [`tools/ucn-song-generator.html`](tools/ucn-song-generator.html) — open it directly in a browser, fill in the fields, and copy the formatted output straight into `songs.json`.
+
+---
+
+## Offline & installing
+
+The app registers a service worker (`sw.js`) that precaches the shell — HTML, CSS, JS, fonts, icons and `songs.json` — so it opens with no connection at all. On a phone, use "Add to Home Screen" and it behaves like an app.
+
+- `songs.json` is fetched network-first, so song edits appear as soon as there is a connection, falling back to the cached copy.
+- `pdf-export.js` (~900KB) is deliberately **not** precached. It is cached the first time someone exports, and works offline after that.
+
+> **When you change `index.html`, `app.js`, `lyrics.js` or `styles.css`, bump `VERSION` at the top of `sw.js`.** Otherwise returning visitors keep the old cached copy.
 
 ---
 
 ## PDF Export
 
-Clicking the export button in the app generates a complete PDF songbook:
+The export button offers three scopes — the whole songbook, the current filter, or just your favourites — and generates:
 
 - Cover page with logo and a QR code linking back to the live app
 - Table of contents with clickable links and real page numbers
 - A dedicated divider page per category, each with its own mini table of contents
 - Every song on its own page, with automatic page-break handling for long songs
-- Custom embedded fonts (Exo 2 + Orbitron), with automatic fallback to a standard font if embedding fails for any reason
+- Custom embedded fonts (Exo 2 + Orbitron), with automatic fallback to a standard font if embedding fails
 - Built entirely with [jsPDF](https://github.com/parallax/jsPDF) (MIT licensed, embedded directly — no external CDN calls)
+
+---
+
+## Notes for maintainers
+
+**Lyric parsing lives in one place.** `lyrics.js` turns a song's `lyrics` string into typed blocks (`verse`, `chorus`, `label`, `repeat`), and both the app and the PDF exporter render from that. The two used to carry separate copies of this logic, which drifted — a chorus-detection bug had to be found and fixed in both, and it wasn't. If you change how lyrics are interpreted, change it in `lyrics.js` only.
+
+**Keyboard shortcuts:** `/` focuses search, `r` opens a random song, `Space` toggles auto-scroll in a song, `Esc` backs out.
 
 ---
 
@@ -109,6 +150,7 @@ Clicking the export button in the app generates a complete PDF songbook:
 - **Made by:** Sub Lt Tetra — Discord: `finlay3110`
 - **Original Songbook:** Compiled by Lt. Cmdr. Jim — Ship's Councillor
 - **Traditional Songs booklet:** Lt. Dorward
+- **Fonts:** Exo 2 and OpenDyslexic, both SIL Open Font License 1.1 — see [`fonts/LICENSE.md`](fonts/LICENSE.md)
 
 ## Requesting updates or reporting an issue
 
