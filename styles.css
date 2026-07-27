@@ -40,6 +40,30 @@
    clear 4.5:1 against the surface AND the page background, while
    staying visually recessed.
    ─────────────────────────────────────────────────────────── */
+/* ── SCALES ──────────────────────────────────────────────────
+   Sizes and spacing used to be picked per-component: nine font sizes
+   between .65rem and 1.05rem, and spacing from an ad-hoc set of
+   4/5/6/8/10/12/14/16/18/20px. These are the whole vocabulary now.
+
+   --measure is the reading column width, ~65-70 characters. Lyrics are
+   what this app exists to display, and without it they ran the full
+   width of a desktop window (1408px of 1440px).
+   ─────────────────────────────────────────────────────────── */
+:root{
+  --step--2:.7rem;   /* labels, captions, source references */
+  --step--1:.8rem;   /* secondary metadata */
+  --step-0:.875rem;  /* UI default */
+  --step-1:1rem;     /* emphasis, search field */
+  --step-2:1.2rem;   /* song title */
+  --step-3:1.5rem;   /* section titles */
+
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;--space-5:24px;--space-6:32px;
+
+  --measure:34rem;
+  --rail:380px;      /* desktop list rail */
+  --radius:12px;
+}
+
 :root,:root[data-theme="dark"]{
   --bg:#0E1626;--surface:#152238;--surface2:#1C2A46;--border:#2B3A52;
   --accent:#4FA8C9;--accent-glow:rgba(79,168,201,0.2);
@@ -142,6 +166,10 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
 .song-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:8px;transition:border-color .2s,box-shadow .2s,transform .1s;display:flex;align-items:center;border-left:3px solid transparent;overflow:hidden;}
 .song-card:hover{border-left-color:var(--accent);box-shadow:0 2px 12px var(--accent-glow);}
 .song-card:active{transform:scale(.98);}.song-card.fav{border-left-color:var(--star);}
+/* The list stays on screen beside the song on desktop, so the open song
+   has to be identifiable in it. */
+.song-card.sel{background:var(--surface2);border-color:var(--accent);border-left-color:var(--accent);}
+.song-card.sel .ct{color:var(--accent);}
 .cmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;background:none;border:none;color:inherit;font:inherit;text-align:left;padding:12px 4px 12px 14px;cursor:pointer;}
 .ci{width:36px;height:36px;border-radius:8px;background:var(--tag-bg);display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;color:var(--accent);}
 /* ── ICON SYSTEM ─────────────────────────────────────────────
@@ -179,24 +207,43 @@ mark{background:var(--mark-bg);color:var(--mark-text);border-radius:3px;padding:
 .dbar{padding:0 8px;height:48px;display:flex;align-items:center;gap:4px;flex-shrink:0;border-bottom:1px solid var(--border);background:var(--surface);}
 .bbtn{display:flex;align-items:center;gap:4px;background:none;border:none;color:var(--accent);font-size:.9rem;font-weight:600;cursor:pointer;padding:8px;border-radius:8px;}
 .bbtn:hover{background:var(--accent-glow);}.dact{margin-left:auto;display:flex;gap:4px;}
-.sinfo{padding:16px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
-.sinfo h1{font-size:1.2rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
-.ir{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:.8rem;color:var(--text-muted);}
-.ir.source{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;}
+/* Tightened from 131px to ~95px of vertical space: on an iPhone SE the
+   song view spent 40% of the screen on chrome before the first lyric.
+   Tune and author now share one line instead of stacking as two
+   near-identical rows told apart only by a 12px icon. */
+.sinfo{padding:var(--space-3) var(--space-4);background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.sinfo h1{font-size:var(--step-2);font-weight:700;line-height:1.2;margin-bottom:var(--space-1);}
+.ir{display:flex;align-items:baseline;gap:6px;margin-top:var(--space-1);font-size:var(--step--1);color:var(--text-muted);}
+.ir .sep{color:var(--text-dim);padding:0 2px;}
+.ir.source{margin-top:var(--space-1);font-size:var(--step--2);color:var(--text-dim);}
+/* The lyrics pane takes programmatic focus when a song opens (so screen
+   readers and the keyboard land on the content). It is a scroll container
+   rather than a control, and the default focus ring drew a box round the
+   whole song. */
+.lw:focus,.lw:focus-visible{outline:none;}
 .lw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px calc(120px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;scroll-behavior:auto;}
 .lw::-webkit-scrollbar{width:4px;}.lw::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .lyric-block{margin-bottom:20px;}.lyric-block p,.lyric-chorus p{line-height:1.75;margin-bottom:1px;font-size:var(--font-size);}
 .lyric-chorus{background:var(--chorus-bg);border-left:3px solid var(--chorus-border);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:20px;}
 .lyric-chorus.no-highlight{background:none;border-left:none;padding-left:0;margin-bottom:20px;}
-.chorus-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--chorus-border);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.chorus-label{font-size:var(--step--1);font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--chorus-border);margin-bottom:6px;display:flex;align-items:center;gap:5px;}
 .no-highlight .chorus-label{display:none;}
-.lyric-instruction{text-align:center;color:var(--text-dim);font-style:italic;font-size:.85rem;margin-bottom:16px;padding:4px;}
-.lyric-section-label{color:var(--accent);font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:4px 0;}
+/* Left-aligned like every other line, and readable: centred low-contrast
+   italics read as a stray fragment rather than an instruction. */
+.lyric-instruction{color:var(--text-muted);font-style:italic;font-size:var(--step-0);margin-bottom:var(--space-4);padding:var(--space-1) 0;display:flex;align-items:center;gap:6px;}
+.lyric-section-label{color:var(--accent);font-size:var(--step--2);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding:4px 0;}
 .trad-badge{display:inline-block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 7px;border-radius:10px;background:var(--accent-glow);color:var(--accent);border:1px solid var(--accent);margin-left:6px;vertical-align:middle;}
 .overlay{position:fixed;inset:0;background:var(--scrim);z-index:30;display:none;backdrop-filter:blur(3px);}
 .overlay.vis{display:block;}
 .panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:2px solid var(--accent);border-radius:20px 20px 0 0;z-index:31;padding:18px 20px 24px;transform:translateY(100%);transition:transform .3s ease;overflow-y:auto;max-height:85vh;max-height:85dvh;}
-.panel.vis{transform:translateY(0);}.sh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
+.panel.vis{transform:translateY(0);}
+@media (min-width:720px){
+  .panel{left:50%;right:auto;width:min(34rem,calc(100% - var(--space-6)));border-radius:16px;bottom:var(--space-5);border:1px solid var(--border);border-top:2px solid var(--accent);
+    /* Must clear its own height AND the gap below it, or a sliver stays visible. */
+    transform:translate(-50%,calc(100% + var(--space-5)));}
+  .panel.vis{transform:translate(-50%,0);}
+  .sh{display:none;}
+}.sh{width:40px;height:4px;background:var(--border);border-radius:2px;margin:0 auto 16px;}
 @media (prefers-reduced-motion:reduce){.panel{transition:none;}}
 .stitle{font-size:1rem;font-weight:700;margin-bottom:14px;text-align:center;color:var(--accent);}
 .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);}
@@ -207,14 +254,30 @@ mark{background:var(--mark-bg);color:var(--mark-text);border-radius:3px;padding:
 .tslider::before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.3s;}
 .tog input:checked+.tslider{background:var(--accent);}.tog input:checked+.tslider::before{transform:translateX(20px);}
 .tog input:focus-visible+.tslider{outline:2px solid var(--accent);outline-offset:2px;}
-.fbtns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
-.fbtn{padding:6px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text-muted);font-size:.8rem;cursor:pointer;transition:border-color .2s,color .2s,background .2s;font-family:inherit;}
-.fbtn.active{border-color:var(--accent);color:var(--accent);background:var(--accent-glow);}
+/* One bordered container with dividers, rather than three detached
+   pills that happened to sit next to each other. */
+.seg{display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface2);flex-shrink:0;}
+.segb{padding:6px 12px;border:none;background:none;color:var(--text-muted);font-size:var(--step--1);cursor:pointer;font-family:inherit;transition:color .2s,background .2s;white-space:nowrap;}
+.segb+.segb{border-left:1px solid var(--border);}
+.segb:hover:not(.active){color:var(--text);}
+.segb.active{background:var(--accent);color:var(--bg);font-weight:600;}
+.segb:focus-visible{outline-offset:-2px;}
+
+/* Settings groups */
+.sgroup{margin-bottom:var(--space-4);}
+.sgroup:last-child{margin-bottom:0;}
+.sgroup-h{font-size:var(--step--2);font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:var(--space-1);}
+.sgroup .srow:last-child{border-bottom:none;}
+
+/* Sheets had no visible way to dismiss them — only tap-outside, Escape
+   or the back gesture, none of which are discoverable. */
+.panel-x{position:absolute;top:14px;right:14px;width:34px;height:34px;border:none;background:none;color:var(--text-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1rem;transition:color .2s,background .2s;}
+.panel-x:hover{color:var(--text);background:var(--surface2);}
 .szw{display:flex;align-items:center;gap:10px;}
 .szbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:border-color .2s,color .2s;font-family:inherit;}
 .szbtn:hover{border-color:var(--accent);color:var(--accent);}
 .szval{font-size:.85rem;color:var(--text-muted);min-width:32px;text-align:center;}
-.spw{display:flex;align-items:center;gap:8px;flex:1;max-width:190px;}.spw input{flex:1;accent-color:var(--accent);}
+.spw{display:flex;align-items:center;gap:8px;flex-shrink:0;width:150px;}.spw input{flex:1;accent-color:var(--accent);}
 .spl{font-size:.8rem;color:var(--text-muted);min-width:34px;text-align:right;}
 .about-section{padding:14px 0;border-bottom:1px solid var(--border);}.about-section:last-child{border-bottom:none;}
 .about-section h3{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin-bottom:8px;}
@@ -242,3 +305,118 @@ mark{background:var(--mark-bg);color:var(--mark-text);border-radius:3px;padding:
 .toast.err{border-left-color:#DD7A2B;}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none;}}
+
+/* ── SCROLL PROGRESS ────────────────────────────────────────
+   A song can be several screens long and auto-scroll gives no sense of
+   position. 2px, pinned above the lyrics. */
+#lyric-progress{height:2px;background:var(--border);flex-shrink:0;}
+#lyric-progress>span{display:block;height:100%;width:0;background:var(--accent);transition:width .1s linear;}
+@media (prefers-reduced-motion:reduce){#lyric-progress>span{transition:none;}}
+
+/* ── DESKTOP EMPTY STATE ────────────────────────────────────
+   On wide screens the song pane is always present, so it needs
+   something to say when nothing is selected yet. */
+#detail-empty{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;gap:var(--space-3);padding:var(--space-6);text-align:center;color:var(--text-muted);}
+#detail-empty .de-icon{color:var(--border);}
+#detail-empty h2{font-size:var(--step-1);font-weight:600;color:var(--text);}
+#detail-empty p{font-size:var(--step-0);max-width:26rem;line-height:1.6;}
+#detail-empty kbd{font-family:inherit;font-size:var(--step--2);background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--text);}
+
+/* ── SINGING MODE (phones/tablets) ──────────────────────────
+   With a song open there were two stacked toolbars — the global header
+   and the song's own bar — plus the Tool Portal row, together eating
+   40% of an iPhone SE screen before the first lyric. With a song open
+   the song bar is the only toolbar, and it carries Settings so text
+   size and chorus display stay reachable while singing. */
+@media (max-width:999px){
+  #app.song-open .hdr{display:none;}
+}
+
+/* ── TABLET: give the lyrics a measure ──────────────────────
+   Below this the phone layout is already the right shape. */
+@media (min-width:720px){
+  .sw,.cw,.lmeta-row,.slist{max-width:46rem;margin-inline:auto;width:100%;}
+  /* Constrain the content, not the scroll container, so the scrollbar
+     stays at the edge of the pane where people expect it. */
+  .lw>*,.sinfo>*{max-width:var(--measure);margin-inline:auto;}
+  .lyric-chorus{border-radius:0 8px 8px 0;}
+}
+
+/* ── DESKTOP: two panes ─────────────────────────────────────
+   Grid areas let the list and the song sit side by side without
+   restructuring the markup — they are still siblings in source order,
+   which keeps the mobile flex-column layout and the tab order intact. */
+@media (min-width:1000px){
+  #app{
+    display:grid;
+    grid-template-columns:var(--rail) minmax(0,1fr);
+    grid-template-rows:auto minmax(0,1fr);
+    grid-template-areas:
+      "hdr hdr"
+      "list detail";
+  }
+  .hdr{grid-area:hdr;}
+  #list-view{grid-area:list;border-right:1px solid var(--border);min-width:0;}
+  #detail-view{grid-area:detail;display:flex;min-width:0;}
+
+  /* The list is always visible, so "Back" has nothing to go back to, and
+     the global header is on screen, so the song bar must not repeat the
+     actions it already offers. */
+  #btn-back,#btn-drand,#btn-dsettings{display:none;}
+  .dbar{justify-content:flex-end;}
+
+  #detail-view:not(.vis) .dbar,
+  #detail-view:not(.vis) .sinfo,
+  #detail-view:not(.vis) #lyric-progress,
+  #detail-view:not(.vis) .lw{display:none;}
+  #detail-view:not(.vis) #detail-empty{display:flex;}
+
+  /* The rail is narrow, so the list furniture stops being centred and
+     goes back to filling it. */
+  .sw,.cw,.lmeta-row,.slist{max-width:none;margin-inline:0;}
+  /* A horizontal scroller is a swipe affordance. With a mouse it just
+     looks like a pill cut in half, so in the rail they wrap instead. */
+  .cats{flex-wrap:wrap;overflow-x:visible;}
+  .slist{padding-bottom:var(--space-5);}
+  .lw{padding-block:var(--space-5) var(--space-6);}
+  .song-card{margin-bottom:6px;}
+  /* A hover-capable pointer does not need 48px thumb targets. */
+  .cstar{width:44px;}
+}
+
+@media (min-width:1400px){
+  :root{--rail:420px;}
+}
+
+/* ── PRINT ──────────────────────────────────────────────────
+   Someone who wants one song on paper should not have to build the
+   whole 900KB PDF. The structural part matters more than the styling:
+   the app is a fixed-height flex layout with its own scroll containers,
+   so without unsetting those, printing captured one screenful and threw
+   the rest of the song away. */
+@media print{
+  html,body{overflow:visible!important;height:auto!important;background:#fff!important;color:#000!important;}
+  #app{display:block!important;height:auto!important;}
+  .hdr,.portal-bar,.dbar,#list-view,#lyric-progress,.overlay,.panel,#toasts,#detail-empty,.sprite{display:none!important;}
+  #detail-view{display:block!important;overflow:visible!important;}
+  .sinfo{padding:0 0 12pt;background:none!important;border-bottom:1pt solid #999;}
+  .sinfo h1{font-size:18pt;color:#000!important;}
+  .ir,.ir.source{color:#333!important;font-size:9pt;margin-top:2pt;}
+  .lw{overflow:visible!important;height:auto!important;padding:12pt 0 0!important;}
+  .lw>*,.sinfo>*{max-width:none;}
+  .lyric-block p,.lyric-chorus p{font-size:11pt;line-height:1.5;color:#000!important;}
+  /* A left rule and a hairline beat a filled panel: it survives
+     greyscale printers and does not drink ink. */
+  .lyric-chorus{background:none!important;border-left:2pt solid #666!important;border-radius:0!important;padding:4pt 0 4pt 10pt;margin-bottom:10pt;}
+  .lyric-chorus.no-highlight{border-left:2pt solid #666!important;padding-left:10pt;}
+  .chorus-label{color:#000!important;font-size:8pt;}
+  .lyric-section-label{color:#000!important;font-size:8pt;}
+  .lyric-instruction{color:#333!important;}
+  .trad-badge{border-color:#999!important;color:#000!important;background:none!important;}
+  .icn{display:none;}
+  mark{background:none!important;color:#000!important;font-weight:700;}
+  /* Never split a chorus across a page break mid-song. */
+  .lyric-chorus,.lyric-block{break-inside:avoid;page-break-inside:avoid;}
+  .sinfo,.sinfo h1{break-after:avoid;page-break-after:avoid;}
+  @page{margin:16mm 14mm;}
+}
