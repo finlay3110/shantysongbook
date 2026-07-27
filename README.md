@@ -19,8 +19,6 @@ A fan-made digital songbook for the **United Confederation Navy (UCN)** communit
 - 🎵 **Auto-scroll** and **keep-screen-awake** for singing hands-free
 - 📄 **PDF export** — the whole songbook, the current filter, or just your favourites, with cover page, table of contents, per-section divider pages and a corner-frame design on every page
 - 📱 **Installable and fully offline** — add it to your home screen and it works with no signal at all
-- 💻 **Two-pane layout on desktop**, a proper reading column on tablets, and a clean **print** stylesheet for one song on paper
-- 🎤 **Singing mode** — with a song open on a phone the chrome collapses to a single toolbar
 
 ---
 
@@ -136,39 +134,6 @@ The export button offers three scopes — the whole songbook, the current filter
 - Every song on its own page, with automatic page-break handling for long songs
 - Custom embedded fonts (Exo 2 + Orbitron), with automatic fallback to a standard font if embedding fails
 - Built entirely with [jsPDF](https://github.com/parallax/jsPDF) (MIT licensed, embedded directly — no external CDN calls)
-
----
-
-## Testing
-
-```
-npm install                     # Playwright, for the browser tests
-npm run validate                # checks songs.json
-npm test                        # 31 browser tests
-npm run test:headed             # ...and watch them run
-```
-
-Both run in CI on every push (`.github/workflows/validate.yml`). The browser tests cover
-the things that have actually broken before — chorus rendering, history and deep links,
-filters, search, focus management, offline boot — plus the layout budgets the design
-depends on: chrome above the lyrics must stay under 185px on a phone, and the desktop
-lyric measure under 640px. If a redesign blows those budgets, the tests fail.
-
----
-
-## Design notes
-
-The app is used in three places and the layout adapts to each:
-
-| Width | Layout |
-|---|---|
-| < 720px | Single column. With a song open the global header hides so the song's own bar is the only toolbar — Settings lives there too, since text size is what you reach for mid-song. |
-| ≥ 720px | Lyrics get a reading column (`--measure`, ~65–70 characters) instead of running the full width. |
-| ≥ 1000px | Two panes: a list rail beside the song. The list stays visible, so "Back" is hidden and the open song is highlighted in the rail. |
-| print | `@media print` — just the song, black on white, no app chrome, choruses kept whole across page breaks. |
-
-Type sizes and spacing come from the `--step-*` and `--space-*` scales at the top of
-`styles.css`. Prefer adding a use of an existing step to inventing a new value.
 
 ---
 

@@ -23,7 +23,7 @@
                                      kept and works offline after that
    ============================================================ */
 
-var VERSION = 'ucn-songbook-v2';
+var VERSION = 'ucn-songbook-v1';
 var SHELL = [
   './',
   'index.html',

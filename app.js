@@ -60,12 +60,6 @@
   /* ── HELPERS ────────────────────────────────────────────── */
   var $ = function (id) { return document.getElementById(id); };
 
-  /* On wide screens the list and the song sit side by side, so opening a
-     song must not hide the list. Everything else about routing — the
-     hash, the history entries, deep links — is identical either way. */
-  var wide = window.matchMedia('(min-width: 1000px)');
-  function isWide() { return wide.matches; }
-
   /* Escapes quotes as well as angle brackets — the old version did not,
      and its output was being interpolated into HTML attributes. */
   function esc(s) {
@@ -244,7 +238,6 @@
       '</div>';
     }
     el.innerHTML = html;
-    markSelectedCard();
   }
 
   /* Categories are computed from the songs, so a new category in
@@ -331,20 +324,11 @@
         (song.source_page != null ? ', p.' + esc(song.source_page) : '') + '</span></div>'
       : '';
 
-    /* Tune and author share a line: as two stacked rows they read as
-       duplicated text ("Barrett's Privateers; Stan Rogers" above
-       "Stan Rogers") told apart only by a 12px icon. */
-    /* Many tune fields already end with the author ("Barrett's Privateers;
-       Stan Rogers"), so only add the credit when it says something new. */
-    var tuneText = song.tune || 'Tune unknown';
-    var repeatsAuthor = song.words && fold(tuneText).indexOf(fold(song.words)) > -1;
-    var credit = '<div class="ir"><span>' + icon('musicnote') + '</span><span>' +
-      highlight(tuneText, q) +
-      (song.words && !repeatsAuthor ? '<span class="sep">&middot;</span>words by ' + highlight(song.words, q) : '') +
-      '</span></div>';
-
     $('song-info').innerHTML =
-      '<h1>' + highlight(song.title, q) + trad + '</h1>' + credit + source;
+      '<h1>' + highlight(song.title, q) + trad + '</h1>' +
+      '<div class="ir"><span>' + icon('musicnote') + '</span><span>' + highlight(song.tune || 'Tune unknown', q) + '</span></div>' +
+      (song.words ? '<div class="ir"><span>' + icon('pencil') + '</span><span>' + highlight(song.words, q) + '</span></div>' : '') +
+      source;
 
     $('lw').innerHTML = renderLyrics(song.lyrics);
     $('lw').scrollTop = 0;
@@ -356,16 +340,9 @@
 
   function showDetail(id) {
     if (!renderSong(id)) return;
-    if (!isWide()) $('list-view').hidden = true;
+    $('list-view').hidden = true;
     $('detail-view').classList.add('vis');
-    /* Hides the global header on phones so the song's own bar is the only
-       toolbar — see the singing-mode block in styles.css. */
-    $('app').classList.add('song-open');
-    markSelectedCard(true);
-    updateLyricProgress();
-    /* Moving focus mid-list on a desktop would yank the page around; on a
-       phone the list is gone, so the lyrics are the right place to land. */
-    if (!isWide()) $('lw').focus();
+    $('lw').focus();
     requestWakeLock();
   }
 
@@ -374,40 +351,8 @@
     releaseWakeLock();
     $('detail-view').classList.remove('vis');
     $('list-view').hidden = false;
-    $('app').classList.remove('song-open');
     state.currentSong = null;
-    markSelectedCard();
     document.title = 'UCN Songbook';
-  }
-
-  /* The rail keeps the list on screen next to the song, so the open song
-     needs to be identifiable in it. */
-  function markSelectedCard(reveal) {
-    var cards = $('song-list').querySelectorAll('.cmain');
-    for (var i = 0; i < cards.length; i++) {
-      var on = +cards[i].dataset.id === state.currentSong;
-      cards[i].parentNode.classList.toggle('sel', on);
-      cards[i].setAttribute('aria-current', on ? 'true' : 'false');
-      /* On desktop the rail stays on screen, so a song opened from a deep
-         link or the random button should be findable in it. */
-      if (on && reveal && isWide()) {
-        cards[i].parentNode.scrollIntoView({ block: 'nearest' });
-      }
-    }
-  }
-
-  function updateLyricProgress() {
-    var lw = $('lw'), bar = $('lyric-progress').firstElementChild;
-    var max = lw.scrollHeight - lw.clientHeight;
-    bar.style.width = (max > 8 ? Math.min(100, (lw.scrollTop / max) * 100) : 0) + '%';
-  }
-
-  /* Re-evaluate when the window crosses the breakpoint (rotation, a
-     resized desktop window) so the list is never left hidden on a wide
-     screen or shown on top of a song on a narrow one. */
-  function onBreakpointChange() {
-    if (isWide()) $('list-view').hidden = false;
-    else if (state.currentSong != null) $('list-view').hidden = true;
   }
 
   function updateFavBtn() {
@@ -633,9 +578,6 @@
     state.scrollSpeed = Math.max(8, Math.min(90, +v || 26));
     $('scroll-speed').value = state.scrollSpeed;
     $('scroll-speed-val').textContent = state.scrollSpeed;
-    /* A bare "26" meant nothing on its own. */
-    $('scroll-speed-name').textContent =
-      state.scrollSpeed <= 20 ? 'Slow' : state.scrollSpeed <= 45 ? 'Medium' : 'Fast';
     saveState();
   }
 
@@ -745,12 +687,6 @@
     $('size-down').addEventListener('click', function () { applyFontSize(state.fontSize - 2); });
 
     $('btn-settings').addEventListener('click', function () { openPanel('settings'); });
-    /* Reachable from inside a song too, now that the global header hides
-       there on phones — text size is exactly what you reach for mid-song. */
-    $('btn-dsettings').addEventListener('click', function () { openPanel('settings'); });
-    document.querySelectorAll('[data-close-panel]').forEach(function (b) {
-      b.addEventListener('click', function () { closePanel(); });
-    });
     $('btn-about').addEventListener('click', function () { openPanel('about'); });
     $('btn-export-pdf').addEventListener('click', function () {
       if (!$('btn-export-pdf').disabled) openExportSheet();
@@ -778,11 +714,6 @@
     ['touchstart', 'wheel'].forEach(function (evt) {
       $('lw').addEventListener(evt, function () { if (autoScrollActive()) stopAutoScroll(); }, { passive: true });
     });
-    $('lw').addEventListener('scroll', updateLyricProgress, { passive: true });
-    window.addEventListener('resize', updateLyricProgress);
-
-    if (wide.addEventListener) wide.addEventListener('change', onBreakpointChange);
-    else if (wide.addListener) wide.addListener(onBreakpointChange);
 
     $('search-input').addEventListener('input', function (e) {
       state.query = e.target.value;
