@@ -86,7 +86,23 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
 #app{display:flex;flex-direction:column;height:100dvh;}
 @supports not (height:100dvh){#app{height:100vh;}}
 
-.hdr{background:var(--hdr);border-bottom:2px solid var(--accent);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10;}
+/* The installed iOS app is laid out edge-to-edge, behind the status bar
+   (viewport-fit=cover + apple-mobile-web-app-status-bar-style=black-translucent
+   in index.html). That is deliberate — the navy fills the area behind the
+   clock instead of leaving a black band — but it means the header has to
+   reserve that space itself, or it ends up underneath the status bar and the
+   Dynamic Island, which is exactly what happened.
+
+   box-sizing:border-box is set globally, so height includes the padding and
+   the content row stays 56px; the header just grows by the inset. Where
+   there is no inset (desktop, Android, Safari, older iPhones) this is 56px
+   and nothing changes. */
+.hdr{background:var(--hdr);border-bottom:2px solid var(--accent);
+  height:calc(56px + env(safe-area-inset-top,0px));
+  padding-top:env(safe-area-inset-top,0px);
+  padding-left:calc(16px + env(safe-area-inset-left,0px));
+  padding-right:calc(16px + env(safe-area-inset-right,0px));
+  display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:10;}
 .hdr::after{content:'';position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(1px 1px at 15% 35%,rgba(255,255,255,.35) 0%,transparent 100%),radial-gradient(1px 1px at 40% 65%,rgba(255,255,255,.2) 0%,transparent 100%),radial-gradient(1px 1px at 72% 28%,rgba(255,255,255,.3) 0%,transparent 100%),radial-gradient(1.5px 1.5px at 58% 52%,rgba(79,168,201,.5) 0%,transparent 100%);}
 .hdr-l{display:flex;align-items:center;gap:10px;z-index:1;min-width:0;}.hdr-r{display:flex;align-items:center;gap:6px;z-index:1;flex-shrink:0;}
 .logo{height:38px;width:auto;flex-shrink:0;}
@@ -134,7 +150,7 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
 .clear-all-pill.vis{display:inline-flex;}
 .clear-all-pill:hover{color:var(--accent);border-color:var(--accent);}
 .clear-all-pill svg{width:.85em;height:.85em;}
-.slist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px calc(100px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.slist{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 calc(16px + env(safe-area-inset-right,0px)) calc(100px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left,0px));scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
 .slist::-webkit-scrollbar{width:4px;}.slist::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 /* The row is a plain container holding two real buttons — the song
    itself and the star. It used to be one clickable <div> with a nested
@@ -183,7 +199,7 @@ mark{background:var(--mark-bg);color:var(--mark-text);border-radius:3px;padding:
 .sinfo h1{font-size:1.2rem;font-weight:700;line-height:1.2;margin-bottom:8px;}
 .ir{display:flex;align-items:flex-start;gap:6px;margin-top:5px;font-size:.8rem;color:var(--text-muted);}
 .ir.source{border-top:1px solid var(--border);margin-top:8px;padding-top:8px;}
-.lw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px 16px calc(120px + env(safe-area-inset-bottom));scrollbar-width:thin;scrollbar-color:var(--border) transparent;scroll-behavior:auto;}
+.lw{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:20px calc(16px + env(safe-area-inset-right,0px)) calc(120px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left,0px));scrollbar-width:thin;scrollbar-color:var(--border) transparent;scroll-behavior:auto;}
 .lw::-webkit-scrollbar{width:4px;}.lw::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
 .lyric-block{margin-bottom:20px;}.lyric-block p,.lyric-chorus p{line-height:1.75;margin-bottom:1px;font-size:var(--font-size);}
 .lyric-chorus{background:var(--chorus-bg);border-left:3px solid var(--chorus-border);border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:20px;}
