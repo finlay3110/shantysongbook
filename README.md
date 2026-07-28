@@ -117,6 +117,11 @@ fields, and copy the formatted output straight into `songs.json`.
 
 The app registers a service worker (`sw.js`) that precaches the shell — HTML, CSS, JS, fonts, icons and `songs.json` — so it opens with no connection at all. On a phone, use "Add to Home Screen" and it behaves like an app.
 
+iOS gives web pages no way to trigger an install, so the app shows a dismissible hint on
+iPhone and iPad pointing at the Share button. It appears only when the app is not already
+installed, and stays gone once dismissed; the same instructions live permanently in the
+About sheet.
+
 - `songs.json` is fetched network-first, so song edits appear as soon as there is a connection, falling back to the cached copy.
 - `pdf-export.js` (~900KB) is deliberately **not** precached. It is cached the first time someone exports, and works offline after that.
 
