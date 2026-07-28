@@ -84,6 +84,9 @@
       <button class="ibtn" id="btn-settings" aria-label="Settings" title="Settings"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-gear"/></svg></button>
     </div>
   </header>
+  <div class="portal-bar">
+    <a class="portal-link" href="https://toolportal.netlify.app">Tool Portal</a>
+  </div>
   <div id="list-view">
     <div class="sw">
       <div class="sb">
@@ -108,107 +111,76 @@
         <button class="ibtn" id="btn-share" aria-label="Share this song" title="Share"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-share"/></svg></button>
         <button class="ibtn" id="btn-fav" aria-pressed="false" aria-label="Add to favourites" title="Favourite"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-starOutline"/></svg></button>
         <button class="ibtn" id="btn-drand" aria-label="Show a random song" title="Random"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-dice"/></svg></button>
-        <button class="ibtn" id="btn-dsettings" aria-label="Settings" title="Settings"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-gear"/></svg></button>
       </div>
     </div>
     <div class="sinfo" id="song-info"></div>
-    <div id="lyric-progress" aria-hidden="true"><span></span></div>
     <div class="lw" id="lw" tabindex="-1"></div>
-    <div id="detail-empty">
-      <span class="de-icon"><svg class="icn icn-lg" aria-hidden="true" focusable="false"><use href="#i-book"/></svg></span>
-      <h2>Pick a song</h2>
-      <p>Choose one from the list, or press <kbd>r</kbd> for a random song and <kbd>/</kbd> to search.</p>
-    </div>
   </div>
 </div>
 
 <div class="overlay" id="sov"></div>
 <div class="panel" id="spanel" role="dialog" aria-modal="true" aria-labelledby="spanel-title" aria-hidden="true">
-  <div class="sh"></div>
-  <button class="panel-x" data-close-panel aria-label="Close settings"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
-  <div class="stitle" id="spanel-title">Settings</div>
-
-  <!-- Grouped: seven ungrouped rows mixing toggles, segmented buttons, a
-       stepper and a slider gave no sense of what related to what. -->
-  <section class="sgroup" aria-labelledby="sg-lyrics">
-    <h3 class="sgroup-h" id="sg-lyrics">Lyrics</h3>
-    <div class="srow">
-      <div class="slabel">Highlight choruses</div>
-      <label class="tog"><input type="checkbox" id="tog-chorus" checked aria-label="Highlight choruses"><span class="tslider"></span></label>
+  <div class="sh"></div><div class="stitle" id="spanel-title">Settings</div>
+  <div class="srow">
+    <div class="slabel"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-musicnote"/></svg> Highlight Choruses</div>
+    <label class="tog"><input type="checkbox" id="tog-chorus" checked aria-label="Highlight choruses"><span class="tslider"></span></label>
+  </div>
+  <div class="srow">
+    <div class="slabel"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-musicnote"/></svg> Chorus Display</div>
+    <div class="fbtns" role="group" aria-label="Chorus display">
+      <button class="fbtn cdbtn active" data-cd="once">Once only</button>
+      <button class="fbtn cdbtn" data-cd="full">Every time</button>
     </div>
-    <div class="srow">
-      <div>
-        <div class="slabel">Repeated choruses</div>
-        <div class="shint">Write them out in full, or just mark the repeat</div>
-      </div>
-      <div class="seg" role="group" aria-label="Repeated choruses">
-        <button class="segb cdbtn active" data-cd="once">Mark</button>
-        <button class="segb cdbtn" data-cd="full">In full</button>
-      </div>
+  </div>
+  <div class="srow">
+    <div class="slabel">Theme</div>
+    <div class="fbtns" role="group" aria-label="Theme">
+      <button class="fbtn thbtn" data-th="dark">Dark</button>
+      <button class="fbtn thbtn" data-th="light">Light</button>
+      <button class="fbtn thbtn" data-th="auto">Auto</button>
     </div>
-  </section>
-
-  <section class="sgroup" aria-labelledby="sg-appearance">
-    <h3 class="sgroup-h" id="sg-appearance">Appearance</h3>
-    <div class="srow">
-      <div class="slabel">Theme</div>
-      <div class="seg" role="group" aria-label="Theme">
-        <button class="segb thbtn" data-th="dark">Dark</button>
-        <button class="segb thbtn" data-th="light">Light</button>
-        <button class="segb thbtn" data-th="auto">Auto</button>
-      </div>
+  </div>
+  <div class="srow">
+    <div class="slabel">Aa Font</div>
+    <div class="fbtns" role="group" aria-label="Font">
+      <button class="fbtn fontbtn" data-font="system">Default</button>
+      <button class="fbtn fontbtn" data-font="exo">Exo 2</button>
+      <button class="fbtn fontbtn" data-font="dyslexic">Dyslexic</button>
     </div>
-    <div class="srow">
-      <div class="slabel">Font</div>
-      <div class="seg" role="group" aria-label="Font">
-        <button class="segb fontbtn" data-font="system">Default</button>
-        <button class="segb fontbtn" data-font="exo">Exo 2</button>
-        <button class="segb fontbtn" data-font="dyslexic">Dyslexic</button>
-      </div>
+  </div>
+  <div class="srow">
+    <div class="slabel">Text Size</div>
+    <div class="szw">
+      <button class="szbtn" id="size-down" aria-label="Decrease text size">A&#8722;</button>
+      <span class="szval" id="size-val" role="status" aria-live="polite">16px</span>
+      <button class="szbtn" id="size-up" aria-label="Increase text size">A+</button>
     </div>
-    <div class="srow">
-      <div class="slabel">Text size</div>
-      <div class="szw">
-        <button class="szbtn" id="size-down" aria-label="Decrease text size">A&#8722;</button>
-        <span class="szval" id="size-val" role="status" aria-live="polite">16px</span>
-        <button class="szbtn" id="size-up" aria-label="Increase text size">A+</button>
-      </div>
+  </div>
+  <div class="srow">
+    <div>
+      <div class="slabel">Keep screen awake</div>
+      <div class="shint">While a song is open, on supported browsers</div>
     </div>
-  </section>
-
-  <section class="sgroup" aria-labelledby="sg-performing">
-    <h3 class="sgroup-h" id="sg-performing">Performing</h3>
-    <div class="srow">
-      <div>
-        <div class="slabel">Keep screen awake</div>
-        <div class="shint">While a song is open, on supported browsers</div>
-      </div>
-      <label class="tog"><input type="checkbox" id="tog-wake" checked aria-label="Keep screen awake while a song is open"><span class="tslider"></span></label>
+    <label class="tog"><input type="checkbox" id="tog-wake" checked aria-label="Keep screen awake while a song is open"><span class="tslider"></span></label>
+  </div>
+  <div class="srow">
+    <div class="slabel">Auto-scroll speed</div>
+    <div class="spw">
+      <input type="range" id="scroll-speed" min="8" max="90" step="2" value="26" aria-label="Auto-scroll speed in pixels per second">
+      <span class="spl" id="scroll-speed-val">26</span>
     </div>
-    <div class="srow">
-      <div>
-        <div class="slabel">Auto-scroll speed</div>
-        <!-- Was a bare "26" with no unit or meaning. -->
-        <div class="shint"><span id="scroll-speed-name">Medium</span> &middot; <span id="scroll-speed-val">26</span> px/s</div>
-      </div>
-      <div class="spw">
-        <input type="range" id="scroll-speed" min="8" max="90" step="2" value="26" aria-label="Auto-scroll speed in pixels per second">
-      </div>
-    </div>
-  </section>
+  </div>
 </div>
 
 <div class="overlay" id="aov"></div>
 <div class="panel" id="apanel" role="dialog" aria-modal="true" aria-labelledby="apanel-title" aria-hidden="true">
   <div class="sh"></div>
-  <button class="panel-x" data-close-panel aria-label="Close"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
   <div class="about-logo"><img src="data:image/png;base64,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" alt="UCN logo" height="56"></div>
   <div class="stitle" id="apanel-title" style="margin-bottom:4px">UCN Songbook</div>
   <p style="text-align:center;font-size:.8rem;color:var(--text-dim);margin-bottom:16px" id="about-updated"></p>
   <div class="about-section"><h3>Made by</h3><p>Sub Lt Tetra &mdash; Discord: <strong>finlay3110</strong></p></div>
   <div class="about-section"><h3>Original Songbook</h3><p>Compiled by Lt. Cmdr. Jim &mdash; Ship&#39;s Councillor</p></div>
   <div class="about-section"><h3>Request updates</h3><p>Post in the <strong>#songbook</strong> channel on the BC Discord server, or DM Tetra directly.</p></div>
-  <div class="about-section"><h3>More tools</h3><p><a class="portal-link" href="https://toolportal.netlify.app">Tool Portal</a></p></div>
   <div class="about-section"><h3>Disclaimer</h3>
     <div class="disclaimer-box">
       <p>The UCN logo is the property of Bridge Command / The London Space Elevator Limited.</p>
@@ -220,8 +192,7 @@
 
 <div class="overlay" id="eov"></div>
 <div class="panel" id="epanel" role="dialog" aria-modal="true" aria-labelledby="epanel-title" aria-hidden="true">
-  <div class="sh"></div>
-  <button class="panel-x" data-close-panel aria-label="Close"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button><div class="stitle" id="epanel-title">Export PDF</div>
+  <div class="sh"></div><div class="stitle" id="epanel-title">Export PDF</div>
   <button class="opt-btn" id="exp-all"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-book"/></svg></span><span class="ob">Whole songbook<span class="oc" id="exp-all-c"></span></span></button>
   <button class="opt-btn" id="exp-filter"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-filter"/></svg></span><span class="ob">Current filter<span class="oc" id="exp-filter-c"></span></span></button>
   <button class="opt-btn" id="exp-favs"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-starFilled"/></svg></span><span class="ob">Favourites only<span class="oc" id="exp-favs-c"></span></span></button>
