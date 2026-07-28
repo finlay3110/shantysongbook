@@ -81,10 +81,18 @@ html,body{height:100%;overflow:hidden;font-family:system-ui,-apple-system,sans-s
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
 .sprite{display:none;}
 
-/* 100dvh handles the iOS Safari address-bar problem on its own now;
-   the older 100vh + JS --vh workaround has been removed. */
-#app{display:flex;flex-direction:column;height:100dvh;}
-@supports not (height:100dvh){#app{height:100vh;}}
+/* Sized by inset rather than a viewport unit. 100dvh was leaving a strip of
+   background along the bottom of the installed iOS app once the header grew
+   to clear the Dynamic Island — in standalone mode dvh does not appear to
+   include the top safe area, so the taller header pushed the bottom of the
+   layout off the screen.
+
+   A fixed element with inset:0 is exactly the viewport whatever dvh reports.
+   That is safe here specifically because html,body are overflow:hidden and
+   the document itself never scrolls, so there is no collapsing-URL-bar case
+   where the layout and visual viewports diverge — the situation dvh exists
+   to solve. */
+#app{position:fixed;inset:0;display:flex;flex-direction:column;}
 
 /* The installed iOS app is laid out edge-to-edge, behind the status bar
    (viewport-fit=cover + apple-mobile-web-app-status-bar-style=black-translucent
@@ -258,3 +266,26 @@ mark{background:var(--mark-bg);color:var(--mark-text);border-radius:3px;padding:
 .toast.err{border-left-color:#DD7A2B;}
 @keyframes toast-in{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:none;}}
 @media (prefers-reduced-motion:reduce){.toast{animation:none;}}
+
+/* ── ADD TO HOME SCREEN ─────────────────────────────────────
+   iOS Safari has no beforeinstallprompt, so an install cannot be offered
+   programmatically — the only option is to point at the Share button.
+   Sits above the home indicator and stays out of the way of the list. */
+#a2hs{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));
+  z-index:50;display:flex;align-items:center;gap:12px;
+  background:var(--surface2);border:1px solid var(--border);border-left:3px solid var(--accent);
+  border-radius:12px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.4);
+  animation:a2hs-in .28s ease;}
+#a2hs[hidden]{display:none;}
+.a2hs-icon{color:var(--accent);font-size:1.4rem;display:flex;flex-shrink:0;}
+.a2hs-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:.78rem;color:var(--text-muted);line-height:1.45;}
+.a2hs-text strong{color:var(--text);font-weight:600;font-size:.85rem;}
+.a2hs-text span strong{font-size:inherit;}
+.a2hs-share{color:var(--accent);vertical-align:-.15em;}
+.a2hs-x{flex-shrink:0;width:34px;height:34px;border:none;background:none;color:var(--text-dim);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.95rem;}
+.a2hs-x:hover{color:var(--text);background:var(--surface);}
+@keyframes a2hs-in{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@media (prefers-reduced-motion:reduce){#a2hs{animation:none;}}
+/* Wide screens get it as a card rather than a full-width strip. */
+@media (min-width:600px){#a2hs{left:auto;right:16px;width:24rem;}}

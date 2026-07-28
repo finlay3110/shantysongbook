@@ -331,7 +331,10 @@
       source;
 
     $('lw').innerHTML = renderLyrics(song.lyrics);
-    $('lw').scrollTop = 0;
+    /* Deliberately no scroll reset here. renderSong() also runs when a
+       setting changes mid-song (chorus display, highlighting), and yanking
+       the reader back to verse one halfway through a shanty is worse than
+       useless. Opening a song resets the scroll in showDetail() instead. */
     document.title = song.title + ' — UCN Songbook';
     $('detail-view').setAttribute('aria-label', song.title);
     updateFavBtn();
@@ -342,6 +345,13 @@
     if (!renderSong(id)) return;
     $('list-view').hidden = true;
     $('detail-view').classList.add('vis');
+    /* Must come AFTER .vis. While #detail-view is display:none the lyrics
+       pane has no scrolling box, so assigning scrollTop is silently
+       discarded and the browser restores the previous song's position once
+       it becomes visible — which is exactly what it was doing. The rAF pass
+       catches iOS restoring momentum-scroll state after layout. */
+    $('lw').scrollTop = 0;
+    requestAnimationFrame(function () { $('lw').scrollTop = 0; });
     $('lw').focus();
     requestWakeLock();
   }
@@ -660,6 +670,47 @@
     toast(url);
   }
 
+  /* ── ADD TO HOME SCREEN ─────────────────────────────────────
+     iOS fires no beforeinstallprompt, so an install cannot be triggered
+     from script — the user has to be shown where the Share button is.
+     The hint therefore only appears where it is actionable and true:
+     on iOS, when not already installed, and until it is dismissed. */
+  var A2HS_KEY = 'ucn_a2hs_dismissed';
+
+  function isIOS() {
+    var ua = navigator.userAgent || '';
+    /* iPadOS reports itself as a Mac, and is told apart by having a
+       touchscreen — no desktop Mac does. */
+    return /iP(hone|ad|od)/.test(ua) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  }
+
+  function isInstalled() {
+    return window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  }
+
+  function a2hsDismissed() {
+    try { return localStorage.getItem(A2HS_KEY) === '1'; } catch (e) { return false; }
+  }
+
+  function maybeOfferInstall() {
+    if (!isIOS() || isInstalled()) return;
+    /* The About entry stays available even after the bar is dismissed —
+       it is where someone would go looking for it later. */
+    $('about-install').hidden = false;
+    if (a2hsDismissed()) return;
+    /* Held back briefly so it does not land on top of the first paint. */
+    setTimeout(function () {
+      if (!a2hsDismissed()) $('a2hs').hidden = false;
+    }, 1200);
+  }
+
+  function dismissInstallHint() {
+    $('a2hs').hidden = true;
+    try { localStorage.setItem(A2HS_KEY, '1'); } catch (e) {}
+  }
+
   /* ── MAINTAINER TOOLS ───────────────────────────────────────
      Ten taps on the logo opens the song entry generator.
 
@@ -713,6 +764,7 @@
 
     $('btn-settings').addEventListener('click', function () { openPanel('settings'); });
     document.querySelector('.logo').addEventListener('click', onLogoTap);
+    $('a2hs-close').addEventListener('click', dismissInstallHint);
     $('btn-about').addEventListener('click', function () { openPanel('about'); });
     $('btn-export-pdf').addEventListener('click', function () {
       if (!$('btn-export-pdf').disabled) openExportSheet();
@@ -852,6 +904,8 @@
          Last-Modified — that is genuinely when the songs last changed —
          and fall back to when this device last cached them. */
       var modified = localStorage.getItem(SONGS_MODIFIED_KEY);
+      maybeOfferInstall();
+
       var when = localStorage.getItem(CACHE_TIME_KEY);
       var stamp = modified ? new Date(modified) : (when ? new Date(+when) : null);
       $('about-updated').textContent = stamp && !isNaN(stamp)

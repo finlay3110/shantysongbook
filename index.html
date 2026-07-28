@@ -181,6 +181,10 @@
   <div class="about-section"><h3>Made by</h3><p>Sub Lt Tetra &mdash; Discord: <strong>finlay3110</strong></p></div>
   <div class="about-section"><h3>Original Songbook</h3><p>Compiled by Lt. Cmdr. Jim &mdash; Ship&#39;s Councillor</p></div>
   <div class="about-section"><h3>Request updates</h3><p>Post in the <strong>#songbook</strong> channel on the BC Discord server, or DM Tetra directly.</p></div>
+  <div class="about-section" id="about-install" hidden><h3>Install</h3>
+    <p>Add the Songbook to your Home Screen and it opens like an app &mdash; full screen, and it works with no signal.</p>
+    <p>Tap <svg class="icn" aria-hidden="true" focusable="false"><use href="#i-share"/></svg> in the browser toolbar, then <strong>Add to Home Screen</strong>.</p>
+  </div>
   <div class="about-section"><h3>Disclaimer</h3>
     <div class="disclaimer-box">
       <p>The UCN logo is the property of Bridge Command / The London Space Elevator Limited.</p>
@@ -196,6 +200,18 @@
   <button class="opt-btn" id="exp-all"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-book"/></svg></span><span class="ob">Whole songbook<span class="oc" id="exp-all-c"></span></span></button>
   <button class="opt-btn" id="exp-filter"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-filter"/></svg></span><span class="ob">Current filter<span class="oc" id="exp-filter-c"></span></span></button>
   <button class="opt-btn" id="exp-favs"><span class="oi"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-starFilled"/></svg></span><span class="ob">Favourites only<span class="oc" id="exp-favs-c"></span></span></button>
+</div>
+
+<!-- iOS has no beforeinstallprompt, so the only way to get someone to
+     install is to tell them where the button is. Shown by app.js only on
+     iOS, only when not already installed, and only until dismissed. -->
+<div id="a2hs" hidden>
+  <span class="a2hs-icon"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-book"/></svg></span>
+  <span class="a2hs-text">
+    <strong>Install the Songbook</strong>
+    <span>Tap <svg class="icn a2hs-share" aria-hidden="true" focusable="false"><use href="#i-share"/></svg> in the toolbar, then <strong>Add to Home Screen</strong></span>
+  </span>
+  <button class="a2hs-x" id="a2hs-close" aria-label="Dismiss"><svg class="icn" aria-hidden="true" focusable="false"><use href="#i-close"/></svg></button>
 </div>
 
 <div id="toasts" aria-live="polite" aria-atomic="false"></div>
