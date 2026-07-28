@@ -660,6 +660,31 @@
     toast(url);
   }
 
+  /* ── MAINTAINER TOOLS ───────────────────────────────────────
+     Ten taps on the logo opens the song entry generator.
+
+     Hidden, not secured. The app is static files that every visitor
+     downloads, so there is no such thing as a real lock here — what keeps
+     people out is that the generator lives at an unguessable filename.
+     The gesture just means nobody finds it by accident. Never put
+     anything behind this that would matter if it got out.
+     ─────────────────────────────────────────────────────────── */
+  var TOOL_URL = 'tools/gen-187ab8a3.html';
+  var TAPS_NEEDED = 10;
+  var TAP_WINDOW = 1500;                      /* ms allowed between taps */
+  var tapCount = 0, lastTap = 0;
+
+  function onLogoTap() {
+    var now = Date.now();
+    /* Reset unless this tap followed the last one closely, so ordinary
+       stray taps can never accumulate into the gesture. */
+    tapCount = (now - lastTap < TAP_WINDOW) ? tapCount + 1 : 1;
+    lastTap = now;
+    if (tapCount < TAPS_NEEDED) return;       /* nothing shown until the last tap */
+    tapCount = 0;
+    window.open(TOOL_URL, '_blank', 'noopener');
+  }
+
   /* ── EVENTS ─────────────────────────────────────────────── */
   function bindEvents() {
     $('tog-chorus').addEventListener('change', function (e) {
@@ -687,6 +712,7 @@
     $('size-down').addEventListener('click', function () { applyFontSize(state.fontSize - 2); });
 
     $('btn-settings').addEventListener('click', function () { openPanel('settings'); });
+    document.querySelector('.logo').addEventListener('click', onLogoTap);
     $('btn-about').addEventListener('click', function () { openPanel('about'); });
     $('btn-export-pdf').addEventListener('click', function () {
       if (!$('btn-export-pdf').disabled) openExportSheet();

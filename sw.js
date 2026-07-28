@@ -23,7 +23,10 @@
                                      kept and works offline after that
    ============================================================ */
 
-var VERSION = 'ucn-songbook-v1';
+/* v2 shipped a layout that was reverted. Going forward rather than back to
+   v1 guarantees anyone who cached v2 gets replaced rather than relying on
+   two different strings happening to compare unequal. */
+var VERSION = 'ucn-songbook-v4';
 var SHELL = [
   './',
   'index.html',

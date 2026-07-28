@@ -38,8 +38,7 @@ A fan-made digital songbook for the **United Confederation Navy (UCN)** communit
 ├── fonts/                     # Self-hosted Exo 2 + OpenDyslexic (OFL, see LICENSE.md)
 ├── icons/                     # App icons for install / home screen / favicon
 └── tools/
-    ├── ucn-song-generator.html # Standalone helper for formatting new song entries.
-    │                           # NOT linked from the app — open it directly.
+    ├── gen-187ab8a3.html       # Song entry generator (see "Maintainer tools")
     └── validate-songs.mjs      # Checks songs.json before it ships (see below)
 ```
 
@@ -109,7 +108,8 @@ Blocks are separated by a **blank line** (`\n\n`). The first line of a block can
 
 A heading only works as the **first line of a block**, so always leave a blank line above it. The validator catches it when you forget.
 
-A companion song-entry generator is included at [`tools/ucn-song-generator.html`](tools/ucn-song-generator.html) — open it directly in a browser, fill in the fields, and copy the formatted output straight into `songs.json`.
+A companion song-entry generator is included — see **Maintainer tools** below. Fill in the
+fields, and copy the formatted output straight into `songs.json`.
 
 ---
 
@@ -142,6 +142,28 @@ The export button offers three scopes — the whole songbook, the current filter
 **Lyric parsing lives in one place.** `lyrics.js` turns a song's `lyrics` string into typed blocks (`verse`, `chorus`, `label`, `repeat`), and both the app and the PDF exporter render from that. The two used to carry separate copies of this logic, which drifted — a chorus-detection bug had to be found and fixed in both, and it wasn't. If you change how lyrics are interpreted, change it in `lyrics.js` only.
 
 **Keyboard shortcuts:** `/` focuses search, `r` opens a random song, `Space` toggles auto-scroll in a song, `Esc` backs out.
+
+---
+
+## Maintainer tools
+
+The song entry generator is reachable from the app by a hidden gesture:
+
+**Tap the UCN logo in the header ten times.** Taps have to be quick — leave more than 1.5
+seconds between two of them and the count starts over. The generator opens in a new tab.
+
+Nothing appears until the tenth tap, so nobody discovers it by fumbling.
+
+### What this is not
+
+It is a doorway nobody trips over by accident, **not security**. The songbook is plain
+files that every visitor downloads, so anyone who opens the browser's developer tools can
+read the address and go straight there. The only thing genuinely keeping people out is that
+the generator has an unguessable filename (`tools/gen-187ab8a3.html`).
+
+If that address ever gets out, rename the file and update `TOOL_URL` in `app.js` to match.
+
+**Never put anything behind this that would matter if it leaked.**
 
 ---
 
