@@ -189,18 +189,13 @@ function buildOutput(){
     '  "lyrics": "'      + lyricsEsc      + '",'
   ];
 
-  if(book && page){
-    lines.push('  "source_book": "' + esc(book) + '",');
-    lines.push('  "source_page": '  + page       + '');
-  } else if(book){
-    lines.push('  "source_book": "' + esc(book)  + '",');
-    lines.push('  "source_page": null');
-  } else {
-    /* Remove trailing comma from lyrics line and add nulls */
-    lines[lines.length-1] = lines[lines.length-1].replace(/,$/, '');
-    lines.push('  "source_book": null,');
-    lines.push('  "source_page": null');
-  }
+  /* The "lyrics" line above always keeps its trailing comma now, since
+     source_book/source_page always follow it — the previous version
+     stripped that comma whenever no source book was entered, which left
+     the object missing a comma right after the lyrics and broke
+     songs.json every time someone generated an original song. */
+  lines.push('  "source_book": ' + (book ? '"' + esc(book) + '"' : 'null') + ',');
+  lines.push('  "source_page": '  + (book && page ? page : 'null'));
 
   lines.push('}');
   return lines.join('\n');
